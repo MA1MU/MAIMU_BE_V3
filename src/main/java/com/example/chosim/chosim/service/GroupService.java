@@ -5,6 +5,7 @@ import com.example.chosim.chosim.domain.group.GroupEditor;
 import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
+import com.example.chosim.chosim.dto.response.group.GuestResponse;
 import com.example.chosim.chosim.exception.GroupNotFound;
 import com.example.chosim.chosim.repository.GroupRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class GroupService {
         groupRepository.save(group);
     }
 
-    public GroupResponse get(long id){
+    public GroupResponse get(Long id){
         Group group = groupRepository.findById(id)
                 .orElseThrow(GroupNotFound::new);
 
@@ -38,6 +39,19 @@ public class GroupService {
                 .build();
     }
 
+    public GuestResponse getForGuest(Long id){
+        Group group = groupRepository.findById(id)
+                .orElseThrow(GroupNotFound::new);
+
+        return GuestResponse.builder()
+                .id(group.getId())
+                .groupName(group.getGroupName())
+                .groupColor(group.getGroupColor())
+                .maimuCount(group.getMaimus().size())
+                .build();
+    }
+
+
     @Transactional
     public void edit(Long id, GroupEdit groupEdit){
         Group group = groupRepository.findById(id)
@@ -45,7 +59,8 @@ public class GroupService {
 
         GroupEditor.GroupEditorBuilder groupEditorBuilder = group.toEditor();
 
-        GroupEditor groupEditor = groupEditorBuilder.groupName(groupEdit.getGroupName())
+        GroupEditor groupEditor = groupEditorBuilder
+                .groupName(groupEdit.getGroupName())
                 .groupColor(groupEdit.getGroupColor())
                 .build();
         group.edit(groupEditor);
