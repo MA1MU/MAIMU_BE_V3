@@ -1,6 +1,7 @@
 package com.example.chosim.chosim.dto.request.maimu;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,7 +20,7 @@ public class MaimuCreate {
     @NotBlank(message = "please write writerName")
     private String writerName;
 
-    @NotBlank(message = "please write sugarContent")
+    @NotNull(message = "please write sugarContent")
     private Integer sugarContent;
 
     @Builder
