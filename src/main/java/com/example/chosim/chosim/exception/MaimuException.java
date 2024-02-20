@@ -24,4 +24,3 @@ public abstract class MaimuException extends RuntimeException{
         validation.put(fieldName, message);
     }
 }
-
