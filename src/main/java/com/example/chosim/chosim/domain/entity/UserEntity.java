@@ -1,10 +1,13 @@
 package com.example.chosim.chosim.domain.entity;
 
 
+import com.example.chosim.chosim.domain.Locker;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +37,9 @@ public class UserEntity {
 
     private String maimuName;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
+    private List<Locker> lockers = new ArrayList<>();
+
     public void authUser(String role){
         this.role = "ROLE_USER";
     }
@@ -43,5 +49,4 @@ public class UserEntity {
         this.birth = birth;
         this.maimuName = maimuName;
     }
-
 }
