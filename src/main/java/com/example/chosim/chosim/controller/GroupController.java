@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
+//@RequestMapping("/v1/api/join/")
 @RequiredArgsConstructor
 public class GroupController {
 

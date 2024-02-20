@@ -21,8 +21,8 @@ public class LockerService {
 
     //User가 만들어질 때 호출해서 Locker만들기
     //Locker field가 더 추가될 가능성 있어서 LockerCreate DTO 사용
-    public void save(Long id, LockerCreate lockerCreate){
-        UserEntity userEntity = userRepository.findById(id)
+    public void save(String username, LockerCreate lockerCreate){
+        UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 
         Locker locker = Locker.builder()

@@ -19,11 +19,6 @@ public class MaimuController {
 
     private final MaimuService maimuService;
 
-    //외부인이 작성하기 때문에 다른 파일로 옮길 가능성 있음
-    @PostMapping("/group/{groupId}/maimu")
-    public void write(@PathVariable Long groupId, @RequestBody @Valid MaimuCreate request){
-        maimuService.writeMaimu(groupId, request);
-    }
 
     //마이무 1개 내용 보기
     @GetMapping("/maimu/{maimuId}")

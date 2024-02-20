@@ -1,12 +1,16 @@
 package com.example.chosim.chosim.domain.entity.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class JoinRequest {
 
     private int maimuProfile;
