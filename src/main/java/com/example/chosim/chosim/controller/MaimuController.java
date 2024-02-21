@@ -32,10 +32,9 @@ public class MaimuController {
         return maimuService.getList(maimuSearch);
     }
 
-    //수정 가능성 있음, MaimuDelete사용할지 말지 고민중
     @PostMapping("/maimu/{maimuId}/delete")
-    public void delete(@PathVariable Long maimuId, @RequestBody @Valid MaimuDelete request){
-        maimuService.deleteMaimu(maimuId, request);
+    public void delete(@PathVariable Long maimuId){
+        maimuService.deleteMaimu(maimuId);
     }
 
 }

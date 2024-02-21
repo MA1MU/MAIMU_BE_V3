@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-//@RequestMapping("/v1/api/join/")
+@RequestMapping("/v1/api/join/{username}")
 @RequiredArgsConstructor
 public class GroupController {
 
     private final GroupService groupService;
 
     @PostMapping("/group")
-    public void group(@RequestBody @Valid GroupCreate groupCreate){
-        groupService.createGroup(groupCreate);
+    public void group(@PathVariable String username, @RequestBody @Valid GroupCreate groupCreate){
+        groupService.createGroup(username, groupCreate);
     }
 
     @GetMapping(value = "/group/{groupId}", produces = "application/json")

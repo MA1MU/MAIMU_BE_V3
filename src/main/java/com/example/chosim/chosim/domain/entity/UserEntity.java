@@ -1,7 +1,6 @@
 package com.example.chosim.chosim.domain.entity;
 
-
-import com.example.chosim.chosim.domain.Locker;
+import com.example.chosim.chosim.domain.group.Group;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,8 +36,11 @@ public class UserEntity {
 
     private String maimuName;
 
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
+//    private List<Locker> lockers = new ArrayList<>();
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
-    private List<Locker> lockers = new ArrayList<>();
+    private List<Group> groups = new ArrayList<>();
 
     public void authUser(String role){
         this.role = "ROLE_USER";
