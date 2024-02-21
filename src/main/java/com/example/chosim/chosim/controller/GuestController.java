@@ -29,5 +29,7 @@ public class GuestController {
         maimuService.writeMaimu(groupId, request);
     }
 
+    //1
+
 
 }

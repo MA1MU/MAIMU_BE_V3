@@ -63,7 +63,7 @@ public class MaimuService {
 
 
     //    maimuDelete를 활용할 수 있는 방법 생각해봐야 할듯
-    public void deleteMaimu(Long maimuId, MaimuDelete maimuDelete){
+    public void deleteMaimu(Long maimuId){
         Maimu maimu = maimuRepository.findById(maimuId)
                 .orElseThrow(MaimuNotFound::new);
 
