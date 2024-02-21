@@ -15,14 +15,14 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
-@Table(name ="mainPage")
+@Table(name ="mainPage", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"userEntity_id", "groupName"} )})
+//@Table(name = "mainPage")
 public class Group {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "group_id")
     private Long id;
-
 
     private String groupName;
 
