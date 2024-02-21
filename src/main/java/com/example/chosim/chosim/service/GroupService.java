@@ -9,10 +9,12 @@ import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
 import com.example.chosim.chosim.dto.response.group.GuestResponse;
 import com.example.chosim.chosim.exception.GroupNotFound;
+import com.example.chosim.chosim.exception.InvalidRequest;
 import com.example.chosim.chosim.exception.UserEntityNotFound;
 import com.example.chosim.chosim.repository.GroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +36,12 @@ public class GroupService {
                 .build();
         group.setUserEntity(userEntity);
 
-        groupRepository.save(group);
+        try{
+            groupRepository.save(group);
+        }catch (DataIntegrityViolationException e){
+            throw new InvalidRequest();
+        }
+
     }
 
     public GroupResponse get(Long id){
