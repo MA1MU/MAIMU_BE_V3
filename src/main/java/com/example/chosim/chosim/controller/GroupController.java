@@ -27,6 +27,7 @@ public class GroupController {
         return groupService.get(groupId);
     }
 
+
     @PatchMapping("/group/{groupId}")
     public void edit(@PathVariable Long groupId, @RequestBody @Valid GroupEdit groupEdit){
         groupService.edit(groupId, groupEdit);

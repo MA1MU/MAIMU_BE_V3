@@ -32,7 +32,7 @@ public class MaimuController {
         return maimuService.getList(maimuSearch);
     }
 
-    @PostMapping("/maimu/{maimuId}/delete")
+    @DeleteMapping("/maimu/{maimuId}/delete")
     public void delete(@PathVariable Long maimuId){
         maimuService.deleteMaimu(maimuId);
     }

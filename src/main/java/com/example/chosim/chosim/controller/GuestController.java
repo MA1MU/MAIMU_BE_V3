@@ -21,7 +21,12 @@ public class GuestController {
     private final GroupService groupService;
 
     @GetMapping("/guest/{username}/{groupId}")
-    public GuestResponse get(@RequestBody GuestRequest request){
+    public GuestResponse get(@PathVariable String username, @PathVariable Long groupId){
+        GuestRequest request = GuestRequest.builder()
+                .groupId(groupId)
+                .username(username)
+                .build();
+
         return groupService.getForGuest(request);
     }
 
