@@ -1,11 +1,13 @@
 package com.example.chosim.chosim.domain.entity;
 
-
+import com.example.chosim.chosim.domain.group.Group;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -36,6 +38,12 @@ public class UserEntity {
 
     private String maimuName;
 
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
+//    private List<Locker> lockers = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
+    private List<Group> groups = new ArrayList<>();
+
     public void authUser(String role){
         this.role = "ROLE_USER";
     }
@@ -45,5 +53,4 @@ public class UserEntity {
         this.birth = birth;
         this.maimuName = maimuName;
     }
-
 }
