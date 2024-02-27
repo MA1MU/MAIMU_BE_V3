@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.controller;
 
+import com.example.chosim.chosim.dto.request.GuestRequest;
 import com.example.chosim.chosim.dto.request.maimu.MaimuCreate;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
 import com.example.chosim.chosim.dto.response.group.GuestResponse;
@@ -19,17 +20,14 @@ public class GuestController {
     private final MaimuService maimuService;
     private final GroupService groupService;
 
-    @GetMapping("/guest/{groupId}")
-    public GuestResponse get(@PathVariable Long groupId){
-        return groupService.getForGuest(groupId);
+    @GetMapping("/guest/{username}/{groupId}")
+    public GuestResponse get(@RequestBody GuestRequest request){
+        return groupService.getForGuest(request);
     }
 
     @PostMapping("/guest/{groupId}/maimu")
     public void write(@PathVariable Long groupId, @RequestBody @Valid MaimuCreate request){
         maimuService.writeMaimu(groupId, request);
     }
-
-    //1
-
 
 }

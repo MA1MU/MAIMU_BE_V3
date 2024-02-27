@@ -4,6 +4,7 @@ import com.example.chosim.chosim.domain.entity.UserEntity;
 import com.example.chosim.chosim.domain.entity.repository.UserRepository;
 import com.example.chosim.chosim.domain.group.Group;
 import com.example.chosim.chosim.domain.group.GroupEditor;
+import com.example.chosim.chosim.dto.request.GuestRequest;
 import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
@@ -55,8 +56,12 @@ public class GroupService {
                 .build();
     }
 
-    public GuestResponse getForGuest(Long id){
-        Group group = groupRepository.findById(id)
+    public GuestResponse getForGuest(GuestRequest request){
+
+        UserEntity userEntity = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(UserEntityNotFound::new);
+
+        Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(GroupNotFound::new);
 
         return GuestResponse.builder()
