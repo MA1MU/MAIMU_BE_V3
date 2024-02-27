@@ -2,12 +2,16 @@ package com.example.chosim.chosim.controller;
 
 import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
+import com.example.chosim.chosim.dto.response.group.GroupListResponse;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
+import com.example.chosim.chosim.dto.response.group.GroupResponseDto;
 import com.example.chosim.chosim.service.GroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -20,6 +24,12 @@ public class GroupController {
     @PostMapping("/group")
     public void group(@PathVariable String username, @RequestBody @Valid GroupCreate groupCreate){
         groupService.createGroup(username, groupCreate);
+    }
+
+    @GetMapping("/group")
+    public GroupListResponse groupList(@PathVariable String username){
+        List<GroupResponseDto> all = groupService.getList(username);
+        return new GroupListResponse(all);
     }
 
     @GetMapping(value = "/group/{groupId}", produces = "application/json")

@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.minidev.json.annotate.JsonIgnore;
 import org.apache.catalina.User;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class Group {
     private UserEntity userEntity;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "group")
+    @JsonIgnore
     private List<Maimu> maimus = new ArrayList<>();
 
 //    @Builder
