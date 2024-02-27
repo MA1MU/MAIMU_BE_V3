@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Builder
 public class JoinRequest {
 
-    private int maimuProfile;
+    private String maimuProfile;
     private int year;
     private int month;
     private int date;

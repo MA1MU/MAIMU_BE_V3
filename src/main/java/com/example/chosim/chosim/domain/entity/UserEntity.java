@@ -3,6 +3,7 @@ package com.example.chosim.chosim.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 
@@ -26,9 +27,10 @@ public class UserEntity {
 
     private String email;
 
+    @ColumnDefault("ROLE_GUEST")
     private String role;
 
-    private int maimuProfile;
+    private String maimuProfile;
 
     private LocalDate birth;
 
@@ -38,7 +40,7 @@ public class UserEntity {
         this.role = "ROLE_USER";
     }
 
-    public void initMaimuInfo(int maimuProfile, LocalDate birth, String maimuName){
+    public void initMaimuInfo(String maimuProfile, LocalDate birth, String maimuName){
         this.maimuProfile = maimuProfile;
         this.birth = birth;
         this.maimuName = maimuName;

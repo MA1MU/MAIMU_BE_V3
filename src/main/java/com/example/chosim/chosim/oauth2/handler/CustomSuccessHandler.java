@@ -29,32 +29,42 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         //OAuth2User
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
+        System.out.println(customUserDetails);
 
         String username = customUserDetails.getUsername();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        System.out.println(authorities);
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
+        System.out.println("Role is" + role);
         String token = jwtUtil.createJwt(username, role);
 
         response.addCookie(createCookie("Authorization", token));
+        response.sendRedirect("http://localhost:8080/v1/api/join/test");
 
-        if(role == "ROLE_GUEST") {
-            //여기가 원래는 프론트엔드 주소
-            response.sendRedirect("http://localhost:8080/v1/api/join/test");
-        }
-
-        else{
-            response.sendRedirect("http://localhost:8080/my");
-        }
+        /**
+         * ROLE_GUEST(초기 로그인 이면 프로필 에딧으로
+         * ROLE_USER(한번 로그인 했으면 main page로
+         */
+//        if(role == "ROLE_GUEST") {
+//            //여기가 원래는 프론트엔드 주소
+//            response.sendRedirect("http://localhost:3000/ProfileEdit");
+////              response.sendRedirect("http://localhost:8080/v1/api/join/test");
+//        }
+//
+//        else{
+//            response.sendRedirect("http://localhost:3000/MainPage");
+////            response.sendRedirect("http://localhost:8080/my");
+//        }
     }
 
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(60*60*60);
-        //cookie.setSecure(true);
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
 
