@@ -8,6 +8,7 @@ import com.example.chosim.chosim.dto.request.GuestRequest;
 import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
+import com.example.chosim.chosim.dto.response.group.GroupResponseDto;
 import com.example.chosim.chosim.dto.response.group.GuestResponse;
 import com.example.chosim.chosim.exception.GroupNotFound;
 import com.example.chosim.chosim.exception.InvalidRequest;
@@ -18,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -54,6 +58,12 @@ public class GroupService {
                 .groupName(group.getGroupName())
                 .groupColor(group.getGroupColor())
                 .build();
+    }
+
+    public List<GroupResponseDto> getList(String username){
+        return groupRepository.findByUserEntity_Username(username).stream()
+                .map(GroupResponseDto::new)
+                .collect(Collectors.toList());
     }
 
     public GuestResponse getForGuest(GuestRequest request){
