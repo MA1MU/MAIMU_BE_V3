@@ -39,7 +39,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         else{
             oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
         }
-        String username = oAuth2Response.getProvider() + " " +oAuth2Response.getProviderId();
+        String username = oAuth2Response.getProvider() + oAuth2Response.getProviderId();
 
 
         UserEntity existData = userRepository.findByUsername(username).orElse(null);

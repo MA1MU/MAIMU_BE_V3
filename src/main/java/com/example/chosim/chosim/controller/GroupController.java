@@ -4,7 +4,6 @@ import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupListResponse;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
-import com.example.chosim.chosim.dto.response.group.GroupResponseDto;
 import com.example.chosim.chosim.service.GroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +14,20 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/api/join/{username}")
+@RequestMapping("/v1/api/join")
 @RequiredArgsConstructor
 public class GroupController {
 
     private final GroupService groupService;
 
-    @PostMapping("/group")
+    @PostMapping("/{username}/group")
     public void group(@PathVariable String username, @RequestBody @Valid GroupCreate groupCreate){
         groupService.createGroup(username, groupCreate);
     }
 
-    @GetMapping("/group")
+    @GetMapping("/{username}/group")
     public GroupListResponse groupList(@PathVariable String username){
-        List<GroupResponseDto> all = groupService.getList(username);
+        List<GroupResponse> all = groupService.getList(username);
         return new GroupListResponse(all);
     }
 

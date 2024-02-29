@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
 
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -90,9 +91,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         //세션 설정 : STATELESS
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+//        http
+//                .sessionManagement((session) -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
