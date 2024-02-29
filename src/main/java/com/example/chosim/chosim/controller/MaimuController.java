@@ -27,7 +27,7 @@ public class MaimuController {
     }
 
     //마이무 여러개 보기
-    @GetMapping("/{groupId}")
+    @GetMapping("/{groupId}/all")
     public MaimuListResponse getList(@PathVariable Long groupId){
         List<MaimuResponse> all = maimuService.getList(groupId);
         GroupResponse response = groupService.get(groupId);
