@@ -61,7 +61,6 @@ public class GroupService {
     }
 
     public List<GroupResponseDto> getList(String username){
-
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 

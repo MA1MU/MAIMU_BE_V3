@@ -3,7 +3,9 @@ package com.example.chosim.chosim.controller;
 import com.example.chosim.chosim.dto.request.maimu.MaimuCreate;
 import com.example.chosim.chosim.dto.request.maimu.MaimuDelete;
 import com.example.chosim.chosim.dto.request.maimu.MaimuSearch;
+import com.example.chosim.chosim.dto.response.maimu.MaimuListResponse;
 import com.example.chosim.chosim.dto.response.maimu.MaimuResponse;
+import com.example.chosim.chosim.dto.response.maimu.MaimuResponseDto;
 import com.example.chosim.chosim.service.MaimuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +29,10 @@ public class MaimuController {
     }
 
     //페이징 처리한 마이무 여러개 보기
-    @GetMapping("/maimu")
-    public List<MaimuResponse> getList(@ModelAttribute MaimuSearch maimuSearch){
-        return maimuService.getList(maimuSearch);
+    @GetMapping("/{groupId}/maimu")
+    public MaimuListResponse getList(@PathVariable Long groupId){
+        List<MaimuResponseDto> all = maimuService.getList(groupId);
+        return new MaimuListResponse(all);
     }
 
     @DeleteMapping("/maimu/{maimuId}/delete")
