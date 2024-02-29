@@ -7,24 +7,24 @@ spring:
             client-name: google
             client-id: 712620782396-b3tl0q7psgodfbj41e720m5gc3e090ao.apps.googleusercontent.com
             client-secret: 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
-#            redirect-uri: http://localhost:8080/login/oauth2/code/google
-            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/google
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+#            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/google
             authorization-grant-type: authorization_code
             scope: profile, email
           naver:
             client-name: naver
             client-id: KZgZON8q7InN50LVfi5l
             client-secret: pypfRcLCe9
-#            redirect-uri: http://localhost:8080/login/oauth2/code/naver
-            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/naver
+            redirect-uri: http://localhost:8080/login/oauth2/code/naver
+#            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/naver
             authorization-grant-type: authorization_code
             scope: name, email
           kakao:
             client-name: kakao
             client-id: d227d38f6839c549cdeadda37eeaa977
             client-secret: ge72tYUvgdGMvlEh4zJwYFaGrlNF8SsX
-#            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
-            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/naver
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+#            redirect-uri: http://ec2-52-79-129-227.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/naver
             authorization-grant-type: authorization_code
             scope: profile_nickname, account_email
             client-authentication-method: client_secret_post

@@ -42,7 +42,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String token = jwtUtil.createJwt(username, role);
 
         response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:8080/v1/api/join/test");
+        response.sendRedirect("http://localhost:8080/user/test");
 
         /**
          * ROLE_GUEST(초기 로그인 이면 프로필 에딧으로

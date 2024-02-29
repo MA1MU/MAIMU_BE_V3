@@ -48,7 +48,7 @@ public class UserEntity {
         this.role = "ROLE_USER";
     }
 
-    public void initMaimuInfo(String maimuProfile, LocalDate birth, String maimuName){
+    public void updateMaimuInfo(String maimuProfile, LocalDate birth, String maimuName){
         this.maimuProfile = maimuProfile;
         this.birth = birth;
         this.maimuName = maimuName;

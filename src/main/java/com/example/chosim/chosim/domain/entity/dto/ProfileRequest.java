@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinRequest {
+public class ProfileRequest {
 
     private String maimuProfile;
     private int year;
