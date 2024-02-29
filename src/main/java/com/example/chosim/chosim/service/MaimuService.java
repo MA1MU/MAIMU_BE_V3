@@ -6,6 +6,7 @@ import com.example.chosim.chosim.dto.request.maimu.MaimuCreate;
 import com.example.chosim.chosim.dto.request.maimu.MaimuDelete;
 import com.example.chosim.chosim.dto.request.maimu.MaimuSearch;
 import com.example.chosim.chosim.dto.response.maimu.MaimuResponse;
+import com.example.chosim.chosim.dto.response.maimu.MaimuResponseDto;
 import com.example.chosim.chosim.exception.GroupNotFound;
 import com.example.chosim.chosim.exception.MaimuNotFound;
 import com.example.chosim.chosim.repository.GroupRepository;
@@ -55,9 +56,9 @@ public class MaimuService {
                 .build();
     }
 
-    public List<MaimuResponse> getList(MaimuSearch maimuSearch){
-        return maimuRepository.getList(maimuSearch).stream()
-                .map(MaimuResponse::new)
+    public List<MaimuResponseDto> getList(Long id){
+        return maimuRepository.findByGroup_Id(id).stream()
+                .map(MaimuResponseDto::new)
                 .collect(Collectors.toList());
     }
 
