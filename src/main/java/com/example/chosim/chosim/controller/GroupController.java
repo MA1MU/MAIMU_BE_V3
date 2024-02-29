@@ -14,30 +14,30 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/api/join")
+@RequestMapping("/v1/api/group")
 @RequiredArgsConstructor
 public class GroupController {
 
     private final GroupService groupService;
 
-    @PostMapping("/{username}/group")
+    @PostMapping("/{username}")
     public void group(@PathVariable String username, @RequestBody @Valid GroupCreate groupCreate){
         groupService.createGroup(username, groupCreate);
     }
 
-    @GetMapping("/{username}/group")
+    @GetMapping("/{username}")
     public GroupListResponse groupList(@PathVariable String username){
         List<GroupResponse> all = groupService.getList(username);
         return new GroupListResponse(all);
     }
 
-    @GetMapping(value = "/group/{groupId}", produces = "application/json")
+    @GetMapping(value = "/{groupId}", produces = "application/json")
     public GroupResponse get(@PathVariable Long groupId){
         return groupService.get(groupId);
     }
 
 
-    @PatchMapping("/group/{groupId}")
+    @PatchMapping("/{groupId}")
     public void edit(@PathVariable Long groupId, @RequestBody @Valid GroupEdit groupEdit){
         groupService.edit(groupId, groupEdit);
     }
