@@ -13,6 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@RequestMapping("v1/api/maimu")
 @RequiredArgsConstructor
 public class MaimuController {
 
@@ -20,20 +21,20 @@ public class MaimuController {
     private final GroupService groupService;
 
     //마이무 1개 내용 보기
-    @GetMapping("/maimu/{maimuId}")
+    @GetMapping("/{maimuId}")
     public MaimuResponse get(@PathVariable Long maimuId){
         return maimuService.get(maimuId);
     }
 
     //마이무 여러개 보기
-    @GetMapping("/{groupId}/maimu")
+    @GetMapping("/{groupId}")
     public MaimuListResponse getList(@PathVariable Long groupId){
         List<MaimuResponse> all = maimuService.getList(groupId);
         GroupResponse response = groupService.get(groupId);
         return new MaimuListResponse(response, all);
     }
 
-    @DeleteMapping("/maimu/{maimuId}/delete")
+    @DeleteMapping("/{maimuId}/delete")
     public void delete(@PathVariable Long maimuId){
         maimuService.deleteMaimu(maimuId);
     }
