@@ -14,13 +14,14 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
+@RequestMapping("v1/api/guest")
 @RequiredArgsConstructor
 public class GuestController {
 
     private final MaimuService maimuService;
     private final GroupService groupService;
 
-    @GetMapping("/guest/{username}/{groupId}")
+    @GetMapping("/{username}/{groupId}")
     public GuestResponse get(@PathVariable String username, @PathVariable Long groupId){
         GuestRequest request = GuestRequest.builder()
                 .groupId(groupId)
@@ -30,7 +31,7 @@ public class GuestController {
         return groupService.getForGuest(request);
     }
 
-    @PostMapping("/guest/{groupId}/maimu")
+    @PostMapping("/{groupId}/maimu")
     public void write(@PathVariable Long groupId, @RequestBody @Valid MaimuCreate request){
         maimuService.writeMaimu(groupId, request);
     }
