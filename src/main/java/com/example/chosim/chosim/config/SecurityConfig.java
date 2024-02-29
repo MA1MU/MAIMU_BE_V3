@@ -37,7 +37,7 @@ public class SecurityConfig {
     private static final String[] WHITE_LIST = {
             "/",
             "/user/join",
-            "/guest/**",
+            "/v1/api/guest/**",
             "/user/test",
     };
 
