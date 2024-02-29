@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("v1/api/maimu")
+@RequestMapping("/v1/api/maimu")
 @RequiredArgsConstructor
 public class MaimuController {
 
