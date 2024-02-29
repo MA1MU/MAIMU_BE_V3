@@ -34,6 +34,12 @@ public class SecurityConfig {
         this.jwtUtil = jwtUtil;
     }
 
+    private static final String[] WHITE_LIST = {
+            "/",
+            "/user/join",
+            "/guest/**",
+            "/user/test",
+    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -87,7 +93,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/","/user/join").permitAll()
+                        .requestMatchers(WHITE_LIST).permitAll()
                         .anyRequest().authenticated());
 
         //세션 설정 : STATELESS
