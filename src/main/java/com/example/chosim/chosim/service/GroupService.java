@@ -61,7 +61,11 @@ public class GroupService {
     }
 
     public List<GroupResponseDto> getList(String username){
-        return groupRepository.findByUserEntity_Username(username).stream()
+
+        UserEntity userEntity = userRepository.findByUsername(username)
+                .orElseThrow(UserEntityNotFound::new);
+
+        return groupRepository.findByUserEntity_Id(userEntity.getId()).stream()
                 .map(GroupResponseDto::new)
                 .collect(Collectors.toList());
     }
