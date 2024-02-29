@@ -8,7 +8,6 @@ import com.example.chosim.chosim.dto.request.GuestRequest;
 import com.example.chosim.chosim.dto.request.group.GroupCreate;
 import com.example.chosim.chosim.dto.request.group.GroupEdit;
 import com.example.chosim.chosim.dto.response.group.GroupResponse;
-import com.example.chosim.chosim.dto.response.group.GroupResponseDto;
 import com.example.chosim.chosim.dto.response.group.GuestResponse;
 import com.example.chosim.chosim.exception.GroupNotFound;
 import com.example.chosim.chosim.exception.InvalidRequest;
@@ -46,7 +45,6 @@ public class GroupService {
         }catch (DataIntegrityViolationException e){
             throw new InvalidRequest();
         }
-
     }
 
     public GroupResponse get(Long id){
@@ -60,12 +58,12 @@ public class GroupService {
                 .build();
     }
 
-    public List<GroupResponseDto> getList(String username){
+    public List<GroupResponse> getList(String username){
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 
         return groupRepository.findByUserEntity_Id(userEntity.getId()).stream()
-                .map(GroupResponseDto::new)
+                .map(GroupResponse::new)
                 .collect(Collectors.toList());
     }
 
