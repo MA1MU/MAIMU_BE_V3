@@ -3,7 +3,10 @@ package com.example.chosim.chosim.dto.response.group;
 import com.example.chosim.chosim.domain.Maimu;
 import com.example.chosim.chosim.domain.group.Group;
 import lombok.Builder;
+import lombok.Getter;
 
+
+@Getter
 public class GroupResponseDto {
     private final Long id;
     private final String groupName;
