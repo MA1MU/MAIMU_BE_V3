@@ -25,7 +25,7 @@ public class GroupController {
         groupService.createGroup(username, groupCreate);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/{username}/all")
     public GroupListResponse groupList(@PathVariable String username){
         List<GroupResponse> all = groupService.getList(username);
         return new GroupListResponse(all);
@@ -42,7 +42,7 @@ public class GroupController {
         groupService.edit(groupId, groupEdit);
     }
 
-    @DeleteMapping("/group/{groupId}")
+    @DeleteMapping("/{groupId}")
     public void delete(@PathVariable Long groupId){
         groupService.delete(groupId);
     }
