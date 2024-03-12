@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,19 +23,29 @@ public class JWTUtil {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
-    public String getUsername(String token) {
+    public String getUsername(String tokenwithBearer) {
+
+        String token = tokenwithBearer.replace("Bearer ", "");
 
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("username", String.class);
     }
 
-    public String getRole(String token) {
+    public String getRole(String tokenwithBearer) {
+
+        String token = tokenwithBearer.replace("Bearer ", "");
 
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
     }
 
-    public Boolean isExpired(String token) {
+    public Boolean isExpired(String tokenwithBearer) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+        String token = tokenwithBearer.replace("Bearer ", "");
+        return Jwts
+                .parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload().getExpiration().before(new Date());
     }
 
     public String createJwt(String username, String role) {

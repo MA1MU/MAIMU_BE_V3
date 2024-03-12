@@ -4,12 +4,17 @@ package com.example.chosim.chosim.service;
 import com.example.chosim.chosim.domain.entity.UserEntity;
 import com.example.chosim.chosim.domain.entity.dto.ProfileRequest;
 import com.example.chosim.chosim.domain.entity.repository.UserRepository;
+import com.example.chosim.chosim.domain.group.Group;
 import com.example.chosim.chosim.exception.AppException;
 import com.example.chosim.chosim.exception.ErrorCode;
+import com.example.chosim.chosim.repository.GroupRepository;
+import com.example.chosim.chosim.repository.maimu.MaimuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -17,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
+    private final MaimuRepository maimuRepository;
 
     @Transactional
     public void joinUser(ProfileRequest request, String username){
@@ -53,4 +60,19 @@ public class UserService {
         }
     }
 
+    public void deleteUser(String username){
+        UserEntity user = userRepository.findByUsername(username).orElseThrow();
+
+        Long userId = user.getId();
+
+
+        List<Group> groupList =  groupRepository.findByUserEntity_Id(userId);
+
+        for(Group group : groupList){
+           Long groupId = group.getId();
+           maimuRepository.deleteAllInBatch(maimuRepository.findByGroup_Id(groupId));
+        }
+        groupRepository.deleteAllInBatch(groupList);
+        userRepository.delete(user);
+    }
 }

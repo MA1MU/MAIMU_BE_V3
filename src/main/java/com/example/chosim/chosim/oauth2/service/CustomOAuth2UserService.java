@@ -54,24 +54,38 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .build();
             userRepository.save(newUser);
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(username);
-            userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole("ROLE_GUEST");
+//            UserDTO userDTO = new UserDTO();
+//            userDTO.setUsername(username);
+//            userDTO.setName(oAuth2Response.getName());
+//            userDTO.setRole("ROLE_GUEST");
+
+            UserDTO userDTO = UserDTO.builder()
+                    .role("ROLE_GUEST")
+                    .name(oAuth2Response.getName())
+                    .email(oAuth2Response.getEmail())
+                    .username(username)
+                    .build();
 
             return new CustomOAuth2User(userDTO);
         }
         else{
-            existData.setName(oAuth2Response.getName());
-            existData.setEmail(oAuth2Response.getEmail());
+//            existData.setName(oAuth2Response.getName());
+//            existData.setEmail(oAuth2Response.getEmail());
 //            existData.setRole("ROLE_USER");
 
             userRepository.save(existData);
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(existData.getUsername());
-            userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole(existData.getRole());
+//            UserDTO userDTO = new UserDTO();
+//            userDTO.setUsername(existData.getUsername());
+//            userDTO.setName(oAuth2Response.getName());
+//            userDTO.setRole(existData.getRole());
+
+            UserDTO userDTO = UserDTO.builder()
+                    .role(existData.getRole())
+                    .name(oAuth2Response.getName())
+                    .email(oAuth2Response.getEmail())
+                    .username(existData.getUsername())
+                    .build();
 
             return new CustomOAuth2User(userDTO);
         }

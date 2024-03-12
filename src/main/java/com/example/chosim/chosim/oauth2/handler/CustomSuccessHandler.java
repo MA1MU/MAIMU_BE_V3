@@ -10,8 +10,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -39,36 +41,43 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
         System.out.println("Role is" + role);
-        String token = jwtUtil.createJwt(username, role);
-
-        response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:8080/user/test");
+        String accessToken = jwtUtil.createJwt(username, role);
+//        response.addCookie(createCookie("Authorization", token));
+//        response.sendRedirect("http://localhost:3000");
+        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/LoginHandler")
+                            .queryParam("accessToken", accessToken)
+                                    .build()
+                                            .encode(StandardCharsets.UTF_8)
+                                                    .toUriString();
+            getRedirectStrategy().sendRedirect(request,response,targetUrl);
 
         /**
          * ROLE_GUEST(초기 로그인 이면 프로필 에딧으로
          * ROLE_USER(한번 로그인 했으면 main page로
          */
-//        if(role == "ROLE_GUEST") {
+//        if(role.equals("ROLE_GUEST")) {
 //            //여기가 원래는 프론트엔드 주소
-//            response.sendRedirect("http://localhost:3000/ProfileEdit");
+//            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/ProfileEdit")
+//                            .queryParam("accessToken", accessToken)
+//                                    .build()
+//                                            .encode(StandardCharsets.UTF_8)
+//                                                    .toUriString();
+//            getRedirectStrategy().sendRedirect(request,response,targetUrl);
+////            response.sendRedirect("http://localhost:3000/ProfileEdit");
 ////              response.sendRedirect("http://localhost:8080/v1/api/join/test");
 //        }
 //
 //        else{
-//            response.sendRedirect("http://localhost:3000/MainPage");
+//            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/MainPage")
+//                    .queryParam("accessToken", accessToken)
+//                    .build()
+//                    .encode(StandardCharsets.UTF_8)
+//                    .toUriString();
+//            getRedirectStrategy().sendRedirect(request,response,targetUrl);
+////            response.sendRedirect("http://localhost:3000/MainPage");
 ////            response.sendRedirect("http://localhost:8080/my");
 //        }
     }
 
-    private Cookie createCookie(String key, String value) {
-
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(60*60*60);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-
-        return cookie;
-    }
 
 }

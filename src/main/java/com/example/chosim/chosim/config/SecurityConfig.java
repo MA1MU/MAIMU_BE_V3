@@ -1,15 +1,19 @@
 package com.example.chosim.chosim.config;
 
 
-import com.example.chosim.chosim.jwt.JWTFilter;
+import com.example.chosim.chosim.domain.entity.repository.UserRepository;
+//import com.example.chosim.chosim.jwt.JWTFilter;
 import com.example.chosim.chosim.jwt.JWTUtil;
+import com.example.chosim.chosim.jwt.JwtAuthenticationFilter;
 import com.example.chosim.chosim.oauth2.handler.CustomSuccessHandler;
 import com.example.chosim.chosim.oauth2.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,17 +32,28 @@ public class SecurityConfig {
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil){
+    private final UserRepository userRepository;
+
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, UserRepository userRepository){
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     private static final String[] WHITE_LIST = {
             "/",
             "/user/join",
             "/v1/api/guest/**",
-            "/user/test",
+            "/login/**",
+            "/user/validate"
+    };
+
+    private static final String[] USER_URL = {
+            "/v1/api/group",
+            "/v1/api/group/**",
+            "user/**",
+            "/v1/api/maimu/**"
     };
 
     @Bean
@@ -77,10 +92,13 @@ public class SecurityConfig {
                 .httpBasic((auth) -> auth.disable());
 //        http
 //                .headers(headers-> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-//        http
-//                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
         http
-                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+                .logout(AbstractHttpConfigurer::disable);
+
+        http
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class);
+//        http
+//                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
         //oauth2
         http
@@ -94,12 +112,17 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(WHITE_LIST).permitAll()
+                        .requestMatchers(HttpMethod.GET).permitAll()
+                        .requestMatchers(HttpMethod.GET,USER_URL).authenticated()
+                        .requestMatchers(HttpMethod.POST,USER_URL).authenticated()
+                        .requestMatchers(HttpMethod.PATCH, USER_URL).authenticated()
+                        .requestMatchers(HttpMethod.DELETE, USER_URL).authenticated()
                         .anyRequest().authenticated());
 
-        //세션 설정 : STATELESS
-//        http
-//                .sessionManagement((session) -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+//        세션 설정 : STATELESS
+        http
+                .sessionManagement((session) -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
