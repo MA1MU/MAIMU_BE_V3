@@ -62,7 +62,7 @@ public class GroupService {
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 
-        return groupRepository.findByUserEntity_Id(userEntity.getId()).stream()
+        return groupRepository.findByUserEntity_IdOrderByIdAsc(userEntity.getId()).stream()
                 .map(GroupResponse::new)
                 .collect(Collectors.toList());
     }

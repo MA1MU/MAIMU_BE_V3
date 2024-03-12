@@ -55,7 +55,7 @@ public class MaimuService {
     }
 
     public List<MaimuResponse> getList(Long id){
-        return maimuRepository.findByGroup_Id(id).stream()
+        return maimuRepository.findByGroup_IdOrderByIdAsc(id).stream()
                 .map(MaimuResponse::new)
                 .collect(Collectors.toList());
     }
