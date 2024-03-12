@@ -66,11 +66,11 @@ public class UserService {
         Long userId = user.getId();
 
 
-        List<Group> groupList =  groupRepository.findByUserEntity_Id(userId);
+        List<Group> groupList =  groupRepository.findByUserEntity_IdOrderByIdAsc(userId);
 
         for(Group group : groupList){
            Long groupId = group.getId();
-           maimuRepository.deleteAllInBatch(maimuRepository.findByGroup_Id(groupId));
+           maimuRepository.deleteAllInBatch(maimuRepository.findByGroup_IdOrderByIdAsc(groupId));
         }
         groupRepository.deleteAllInBatch(groupList);
         userRepository.delete(user);
