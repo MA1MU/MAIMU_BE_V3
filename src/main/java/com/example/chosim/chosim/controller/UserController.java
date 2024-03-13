@@ -1,7 +1,9 @@
 package com.example.chosim.chosim.controller;
 
 
+import com.example.chosim.chosim.domain.entity.UserEntity;
 import com.example.chosim.chosim.domain.entity.dto.ProfileRequest;
+import com.example.chosim.chosim.dto.response.user.UserInfoResponse;
 import com.example.chosim.chosim.dto.response.user.UserValidateResponse;
 import com.example.chosim.chosim.jwt.JWTUtil;
 import com.example.chosim.chosim.service.UserService;
@@ -47,6 +49,13 @@ public class UserController {
                 .username(username)
                 .role(role)
                 .build();
+    }
+    @GetMapping("/info")
+    public UserInfoResponse getUserInfo(
+            @RequestHeader("Authorization") String accessToken
+    ){
+        String username = jwtUtil.getUsername(accessToken);
+        return userService.findUserInfobyUsername(username);
     }
 
     @DeleteMapping("/logout")

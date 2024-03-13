@@ -5,6 +5,7 @@ import com.example.chosim.chosim.domain.entity.UserEntity;
 import com.example.chosim.chosim.domain.entity.dto.ProfileRequest;
 import com.example.chosim.chosim.domain.entity.repository.UserRepository;
 import com.example.chosim.chosim.domain.group.Group;
+import com.example.chosim.chosim.dto.response.user.UserInfoResponse;
 import com.example.chosim.chosim.exception.AppException;
 import com.example.chosim.chosim.exception.ErrorCode;
 import com.example.chosim.chosim.repository.GroupRepository;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -24,6 +26,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
+
+
+    public UserInfoResponse findUserInfobyUsername(String username){
+        UserEntity user = userRepository.findByUsername(username).orElseThrow();
+        LocalDate userBirth = user.getBirth();
+        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                .maimuProfile(user.getMaimuProfile())
+                .year(userBirth.getYear())
+                .month(userBirth.getMonthValue())
+                .date(userBirth.getDayOfMonth())
+                .maimuName(user.getMaimuName())
+                .role(user.getRole())
+                .build();
+        return userInfoResponse;
+    }
 
     @Transactional
     public void joinUser(ProfileRequest request, String username){
