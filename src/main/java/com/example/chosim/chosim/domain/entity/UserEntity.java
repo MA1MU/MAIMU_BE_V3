@@ -29,7 +29,7 @@ public class UserEntity {
 
     private String email;
 
-    @ColumnDefault("ROLE_GUEST")
+//    @ColumnDefault("ROLE_GUEST")
     private String role;
 
     private String maimuProfile;
