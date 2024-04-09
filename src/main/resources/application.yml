@@ -63,7 +63,7 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://maimu-db.cr64ekoo6d22.ap-northeast-2.rds.amazonaws.com:3306/maimu-db?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://maimudb.cr64ekoo6d22.ap-northeast-2.rds.amazonaws.com:3306/maimudb?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: admin
     password: a123456789
 
