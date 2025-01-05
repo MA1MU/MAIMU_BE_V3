@@ -1,7 +1,7 @@
 package com.example.chosim.chosim.api.member.controller;
 
 
-import com.example.chosim.chosim.domain.entity.dto.ProfileRequest;
+import com.example.chosim.chosim.api.member.dto.ProfileRequest;
 import com.example.chosim.chosim.api.member.dto.UserInfoResponse;
 import com.example.chosim.chosim.api.member.dto.UserValidateResponse;
 import com.example.chosim.chosim.common.jwt.JWTUtil;

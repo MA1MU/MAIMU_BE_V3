@@ -1,4 +1,4 @@
-package com.example.chosim.chosim.domain.entity.dto;
+package com.example.chosim.chosim.api.member.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -2,7 +2,7 @@ package com.example.chosim.chosim.domain.auth.service;
 
 
 import com.example.chosim.chosim.domain.auth.entity.UserEntity;
-import com.example.chosim.chosim.domain.entity.dto.ProfileRequest;
+import com.example.chosim.chosim.api.member.dto.ProfileRequest;
 import com.example.chosim.chosim.domain.auth.repository.UserRepository;
 import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.api.member.dto.UserInfoResponse;
