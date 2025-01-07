@@ -1,9 +1,8 @@
 package com.example.chosim.chosim.domain.group.service;
 
-import com.example.chosim.chosim.domain.auth.entity.UserEntity;
-import com.example.chosim.chosim.domain.auth.repository.UserRepository;
+import com.example.chosim.chosim.domain.auth.entity.Member;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.domain.group.entity.Group;
-import com.example.chosim.chosim.domain.group.entity.GroupEditor;
 import com.example.chosim.chosim.api.member.dto.GuestRequest;
 import com.example.chosim.chosim.api.group.dto.GroupCreate;
 import com.example.chosim.chosim.api.group.dto.GroupEdit;
@@ -27,18 +26,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GroupService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
 
     public void createGroup(String username, GroupCreate groupCreate){
-        UserEntity userEntity = userRepository.findByUsername(username)
+        Member member = memberRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 
         Group group = Group.builder()
                 .groupName(groupCreate.getGroupName())
                 .groupColor(groupCreate.getGroupColor())
                 .build();
-        group.setUserEntity(userEntity);
+        group.setMember(member);
 
         try{
             groupRepository.save(group);
@@ -59,17 +58,17 @@ public class GroupService {
     }
 
     public List<GroupResponse> getList(String username){
-        UserEntity userEntity = userRepository.findByUsername(username)
+        Member member = memberRepository.findByUsername(username)
                 .orElseThrow(UserEntityNotFound::new);
 
-        return groupRepository.findByUserEntity_IdOrderByIdAsc(userEntity.getId()).stream()
+        return groupRepository.findByUserEntity_IdOrderByIdAsc(member.getId()).stream()
                 .map(GroupResponse::new)
                 .collect(Collectors.toList());
     }
 
     public GuestResponse getForGuest(GuestRequest request){
 
-        UserEntity userEntity = userRepository.findByUsername(request.getUsername())
+        Member member = memberRepository.findByUsername(request.getUsername())
                 .orElseThrow(UserEntityNotFound::new);
 
         Group group = groupRepository.findById(request.getGroupId())
