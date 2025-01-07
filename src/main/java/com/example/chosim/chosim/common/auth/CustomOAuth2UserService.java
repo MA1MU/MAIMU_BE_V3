@@ -1,8 +1,8 @@
 package com.example.chosim.chosim.common.auth;
 
 
-import com.example.chosim.chosim.domain.auth.entity.UserEntity;
-import com.example.chosim.chosim.domain.auth.repository.UserRepository;
+import com.example.chosim.chosim.domain.auth.entity.Member;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException{
@@ -41,17 +41,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String username = oAuth2Response.getProvider() + oAuth2Response.getProviderId();
 
 
-        UserEntity existData = userRepository.findByUsername(username).orElse(null);
+        Member existData = memberRepository.findByUsername(username).orElse(null);
 
         if (existData == null)
         {
-            UserEntity newUser = UserEntity.builder()
+            Member newUser = Member.builder()
                     .username(username)
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())
                     .role("ROLE_GUEST")
                     .build();
-            userRepository.save(newUser);
+            memberRepository.save(newUser);
 
 //            UserDTO userDTO = new UserDTO();
 //            userDTO.setUsername(username);
@@ -72,7 +72,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 //            existData.setEmail(oAuth2Response.getEmail());
 //            existData.setRole("ROLE_USER");
 
-            userRepository.save(existData);
+            memberRepository.save(existData);
 
 //            UserDTO userDTO = new UserDTO();
 //            userDTO.setUsername(existData.getUsername());
