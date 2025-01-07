@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.domain.maimu.entity;
 
+import com.example.chosim.chosim.common.entity.BaseTimeEntity;
 import com.example.chosim.chosim.domain.group.entity.Group;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,24 +11,27 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
-public class Maimu {
+@Table(name = "maimus")
+public class Maimu extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "maimu_id")
     private Long id;
 
+    @Column(name = "maimu_title", nullable = false)
     private String title;
 
     @Lob
+    @Column(name = "maimu_message", columnDefinition = "TEXT", nullable = false)
     private String message;
 
+    
     private String maimuColor;
 
     private String writerName;
 
     private Integer sugarContent;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
