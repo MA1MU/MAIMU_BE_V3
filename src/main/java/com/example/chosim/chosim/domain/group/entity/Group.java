@@ -31,7 +31,7 @@ public class Group {
     private String groupColor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userEntity_id")
+    @JoinColumn(name = "member_id")
     private Member member;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "group")
