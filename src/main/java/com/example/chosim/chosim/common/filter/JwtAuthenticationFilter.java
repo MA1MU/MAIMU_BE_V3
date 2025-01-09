@@ -1,8 +1,8 @@
 package com.example.chosim.chosim.common.filter;
 
 
-import com.example.chosim.chosim.domain.auth.entity.UserEntity;
-import com.example.chosim.chosim.domain.auth.repository.UserRepository;
+import com.example.chosim.chosim.domain.auth.entity.Member;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.common.auth.CustomOAuth2User;
 import com.example.chosim.chosim.common.auth.UserDTO;
@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     private final JWTUtil jwtUtil;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if(!jwtUtil.isExpired(accessToken)){
-            UserEntity user = userRepository.findByUsername(jwtUtil.getUsername(accessToken))
+            Member user = memberRepository.findByUsername(jwtUtil.getUsername(accessToken))
                     .orElseThrow(IllegalStateException::new);
 
             UserDTO userDTO = UserDTO.builder()

@@ -5,9 +5,18 @@ import com.example.chosim.chosim.common.error.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
 public class AppException extends RuntimeException {
 
-    private ErrorCode errorCode;
+    private final ErrorCode errorCode;
+
+    public AppException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+    }
+
+    public AppException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
 }

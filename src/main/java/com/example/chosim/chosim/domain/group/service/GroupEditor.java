@@ -1,4 +1,4 @@
-package com.example.chosim.chosim.domain.group.entity;
+package com.example.chosim.chosim.domain.group.service;
 
 import lombok.Builder;
 import lombok.Getter;

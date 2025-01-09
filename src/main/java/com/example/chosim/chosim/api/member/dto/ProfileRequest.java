@@ -17,8 +17,7 @@ public class ProfileRequest {
     private int year;
     private int month;
     private int date;
-
-    private String maimuName;
+    private String nickName;
 
     public LocalDate getBirth(){
         return LocalDate.of(this.year, this.month, this.date);

@@ -1,7 +1,8 @@
 package com.example.chosim.chosim.domain.group.entity;
 
+import com.example.chosim.chosim.domain.group.service.GroupEditor;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
-import com.example.chosim.chosim.domain.auth.entity.UserEntity;
+import com.example.chosim.chosim.domain.auth.entity.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,8 +16,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
-@Table(name ="mainPage", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"userEntity_id", "groupName"} )})
-//@Table(name = "mainPage")
+@Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"userEntity_id", "groupName"} )})
 public class Group {
 
     @Id
@@ -24,34 +24,25 @@ public class Group {
     @Column(name = "group_id")
     private Long id;
 
+    @Column(name = "group_name", nullable = false)
     private String groupName;
 
+    @Column(name = "group_color", nullable = false)
     private String groupColor;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "locker_id")
-//    private Locker locker;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userEntity_id")
-    private UserEntity userEntity;
+    private Member member;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "group")
     @JsonIgnore
     private List<Maimu> maimus = new ArrayList<>();
 
-//    @Builder
-//    public Group(String groupName, String groupColor, Locker locker){
-//        this.groupName = groupName;
-//        this.groupColor = groupColor;
-//        this.locker = locker;
-//    }
-
     @Builder
-    public Group(String groupName, String groupColor, UserEntity userEntity){
+    public Group(String groupName, String groupColor, Member member){
         this.groupName = groupName;
         this.groupColor = groupColor;
-        this.userEntity = userEntity;
+        this.member = member;
     }
 
     public GroupEditor.GroupEditorBuilder toEditor(){
@@ -65,21 +56,14 @@ public class Group {
         groupColor = groupEditor.getGroupColor();
     }
 
-
     public void addMaimu(Maimu maimu){
         maimu.updateGroup(this);
         this.maimus.add(maimu);
     }
 
-//    public void setLocker(Locker locker){
-//        this.locker = locker;
-//        locker.getGroups().add(this);
-//    }
-
-    public void setUserEntity(UserEntity userEntity){
-        this.userEntity = userEntity;
-        userEntity.getGroups().add(this);
+    public void setMember(Member member){
+        this.member = member;
+        member.getGroups().add(this);
     }
-
 
 }

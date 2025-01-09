@@ -1,7 +1,7 @@
 package com.example.chosim.chosim.common.config;
 
 
-import com.example.chosim.chosim.domain.auth.repository.UserRepository;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 //import com.example.chosim.chosim.jwt.JWTFilter;
 import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.common.filter.JwtAuthenticationFilter;
@@ -31,17 +31,17 @@ public class SecurityConfig {
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, UserRepository userRepository){
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, MemberRepository memberRepository){
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
+        this.memberRepository = memberRepository;
     }
 
     private static final String[] WHITE_LIST = {
-            "/",
+            "/**",
             "/user/join",
             "/v1/api/guest/**",
             "/login/**",
@@ -61,27 +61,6 @@ public class SecurityConfig {
         //csrf disable
         http
                 .csrf((auth) -> auth.disable());
-        http
-                .cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
-
-                    @Override
-                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-
-                        CorsConfiguration configuration = new CorsConfiguration();
-
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
-                        configuration.setAllowCredentials(true);
-                        configuration.setAllowedHeaders(Collections.singletonList("*"));
-                        configuration.setMaxAge(3600L);
-
-                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
-
-                        return configuration;
-                    }
-                }));
-
         //From 로그인 방식 disable
         http
                 .formLogin((auth) -> auth.disable());
@@ -95,7 +74,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable);
 
         http
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
 //        http
 //                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 

@@ -1,25 +1,36 @@
 package com.example.chosim.chosim.common.error.response;
 
+import com.example.chosim.chosim.common.error.ErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
-public class ErrorResponse {
-    private final String code;
-    private final String message;
-    private final Map<String, String> validation;
+public record ErrorResponse (
+        String code,
+        String message,
+        String method,
+        String requestURI
+){
 
-    @Builder
-    public ErrorResponse(String code, String message, Map<String, String> validation) {
-        this.code = code;
-        this.message = message;
-        this.validation = validation != null ? validation : new HashMap<>();
+    public static ErrorResponse of(ErrorCode errorCode, HttpServletRequest request){
+        return new ErrorResponse(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                request.getMethod(),
+                request.getRequestURI()
+        );
     }
 
-    public void addValidation(String fieldName, String errorMessage) {
-        this.validation.put(fieldName, errorMessage);
+    public static ErrorResponse of(HttpServletRequest request, ErrorCode errorCode, final String errorMessage) {
+        return new ErrorResponse(
+                errorCode.getCode(),
+                errorMessage,
+                request.getMethod(),
+                request.getRequestURI()
+        );
     }
+
 }
