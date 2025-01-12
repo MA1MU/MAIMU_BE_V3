@@ -62,9 +62,4 @@ public class Group extends BaseTimeEntity {
         this.maimus.add(maimu);
     }
 
-    public void setMember(Member member){
-        this.member = member;
-        member.getGroups().add(this);
-    }
-
 }
