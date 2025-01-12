@@ -1,8 +1,7 @@
 package com.example.chosim.chosim.api.member.controller;
 
-import com.example.chosim.chosim.api.member.dto.GuestRequest;
-import com.example.chosim.chosim.api.maimu.dto.MaimuCreate;
-import com.example.chosim.chosim.api.group.dto.GuestResponse;
+import com.example.chosim.chosim.api.guest.dto.GuestRequest;
+import com.example.chosim.chosim.api.guest.dto.GuestResponse;
 import com.example.chosim.chosim.domain.group.service.GroupService;
 import com.example.chosim.chosim.domain.maimu.service.MaimuService;
 import jakarta.validation.Valid;
@@ -21,7 +20,7 @@ public class GuestController {
 
     @GetMapping("/{username}/{groupId}")
     public GuestResponse get(@PathVariable String username, @PathVariable Long groupId){
-        GuestRequest request = GuestRequest.builder()
+        com.example.chosim.chosim.api.member.dto.GuestRequest request = com.example.chosim.chosim.api.member.dto.GuestRequest.builder()
                 .groupId(groupId)
                 .username(username)
                 .build();
@@ -30,7 +29,7 @@ public class GuestController {
     }
 
     @PostMapping("/{groupId}/maimu")
-    public void write(@PathVariable Long groupId, @RequestBody @Valid MaimuCreate request){
+    public void write(@PathVariable Long groupId, @RequestBody @Valid GuestRequest request){
         maimuService.writeMaimu(groupId, request);
     }
 
