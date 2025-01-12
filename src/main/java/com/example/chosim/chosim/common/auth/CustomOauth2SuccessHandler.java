@@ -87,7 +87,7 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                     .build()
                     .toUriString();
         }
-        return UriComponentsBuilder.fromHttpUrl(MAINPAGE_URL)
+        return UriComponentsBuilder.fromUriString(MAINPAGE_URL)
                 .build()
                 .toUriString();
     }
