@@ -27,11 +27,6 @@ public class Member extends BaseTimeEntity {
     @Column(name="member_id")
     private Long id;
 
-    //social login 식별자
-    //provider + SNS 사용자 닉네임
-//    @Column(name = "member_unique_id", nullable = false)
-//    private String uniqueId;
-
     //어떤 Social Login 인지 ex)google, naver, kakao
     @Column(name = "member_provider", nullable = false)
     private String provider;
@@ -61,11 +56,16 @@ public class Member extends BaseTimeEntity {
     @Column(name = "member_nickname")
     private String nickName;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "member")
-    private List<Group> groups = new ArrayList<>();
-
     public void updateRole(MemberRole role) {
         this.role = role;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
     }
 
     public void updateMaimuInfo(String maimuProfile, LocalDate birth, String nickName){
