@@ -14,6 +14,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -22,16 +23,18 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Iterator;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private static final int REFRESH_TOKEN_AGE = 259200;
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
     private final String REGISTER_URL= "http://localhost:3000/ProfileEdit";
@@ -39,47 +42,32 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-
         //OAuth2User
         CustomOAuth2User principal = (CustomOAuth2User) authentication.getPrincipal();
         String grantedAuthority = authentication.getAuthorities().stream()
                 .findAny()
                 .orElseThrow()
                 .toString();
+        Token token = jwtTokenProvider.createToken(principal.getMember().getId(), grantedAuthority);
+        String accessToken = token.getAccessToken();
+        response.addHeader("accessToken", accessToken);
 
-        Token token = jwtTokenProvider.createToken(principal.get)
-
-        String providerId = oAuth2User.getProviderId();
-
-        Member member = memberRepository.findByProviderId(providerId).orElseThrow(()-> new AppException(ErrorCode.MEMBER_NOT_FOUND));
-
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-        GrantedAuthority auth = iterator.next();
-        String role = auth.getAuthority();
-        System.out.println("Role is" + role);
-
-        String redirectUrl = getRedirectUrlByRole(MemberRole.fromKey(role));
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-
-        Token token = jwtTokenProvider.createToken(member.getId(), role);
-
-        //Cookie 생성
-        Cookie cookie = new Cookie("refreshtoken", token.getRefreshToken());
-        // 쿠키 속성 설정
-        cookie.setHttpOnly(true);  //httponly 옵션 설정
-        cookie.setSecure(true); //https 옵션 설정
-        cookie.setPath("/"); // 모든 곳에서 쿠키열람이 가능하도록 설정
-        cookie.setMaxAge(60 * 60 * 24); //쿠키 만료시간 설정
-
-        response.setHeader("accesstoken", token.getAccessToken());
-        response.addCookie(cookie);
-
-        //RefreshToken Reddis 저장
-        RefreshToken refreshToken = new RefreshToken(member.getId(),token.getRefreshToken());
+        RefreshToken refreshToken = new RefreshToken(principal.getMember().getId(), token.getRefreshToken());
+        refreshToken.updateRefreshToken(token.getRefreshToken());
         refreshTokenRepository.save(refreshToken);
 
-        getRedirectStrategy().sendRedirect(request,response,redirectUrl);
+        Cookie cookie = new Cookie("refreshToken", token.getRefreshToken());
+        cookie.setPath("/");
+        ZonedDateTime seoulTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime expirationTime = seoulTime.plusSeconds(REFRESH_TOKEN_AGE);
+        cookie.setMaxAge((int) (expirationTime.toEpochSecond() - seoulTime.toEpochSecond()));
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
+        String redirectUrl = getRedirectUrlByRole(MemberRole.fromKey(grantedAuthority));
+        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        log.info("로그인 성공, JWT 토큰 생성");
     }
 
     private String getRedirectUrlByRole(MemberRole role){
