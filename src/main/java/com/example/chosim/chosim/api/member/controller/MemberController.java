@@ -4,7 +4,6 @@ package com.example.chosim.chosim.api.member.controller;
 import com.example.chosim.chosim.api.member.dto.ProfileRequest;
 import com.example.chosim.chosim.api.member.dto.ProfileResponse;
 import com.example.chosim.chosim.api.member.dto.UserValidateResponse;
-import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.domain.auth.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,32 +34,8 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(memberService.updateMemberProfile(request, memberId));
     }
 
-    @GetMapping("/validate")
-    public UserValidateResponse validateUser(
-            @RequestHeader("Authorization") String accessToken
-    ){
-        String role = jwtUtil.getRole(accessToken);
-        String username = jwtUtil.getUsername(accessToken);
-        return  UserValidateResponse.builder()
-                .username(username)
-                .role(role)
-                .build();
-    }
-    @GetMapping("/info")
-    public MemberInfoResponse getUserInfo(
-            @RequestHeader("Authorization") String accessToken
-    ){
-        String username = jwtUtil.getUsername(accessToken);
-        return memberService.findUserInfobyUsername(username);
-    }
+    
+    //TODO: 회원 탈퇴 로직 다시 만들어야 함
 
-    @DeleteMapping("/logout")
-    public ResponseEntity<?> userLogout(
-            @RequestHeader("Authorization") String accessToken
-    ){
-        String username = jwtUtil.getUsername(accessToken);
-        memberService.deleteUser(username);
-        return ResponseEntity.status(HttpStatus.OK).body("회원 탈퇴 성공");
-    }
 
 }
