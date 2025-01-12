@@ -1,7 +1,16 @@
 package com.example.chosim.chosim.common.auth;
 
-import com.example.chosim.chosim.common.jwt.JWTUtil;
+import com.example.chosim.chosim.common.error.ErrorCode;
+import com.example.chosim.chosim.common.error.exception.AppException;
+import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
+import com.example.chosim.chosim.common.jwt.RefreshToken;
+import com.example.chosim.chosim.common.jwt.RefreshTokenRepository;
+import com.example.chosim.chosim.common.jwt.Token;
+import com.example.chosim.chosim.domain.auth.entity.Member;
+import com.example.chosim.chosim.domain.auth.enums.MemberRole;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -18,64 +27,68 @@ import java.util.Iterator;
 @Component
 public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JWTUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public CustomOauth2SuccessHandler(JWTUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    private final String REGISTER_URL= "http://localhost:3000/ProfileEdit";
+    private final String MAINPAGE_URL = "http://localhost:3000/MainPage";
+
+    public CustomOauth2SuccessHandler(JwtTokenProvider jwtTokenProvider, MemberRepository memberRepository, RefreshTokenRepository refreshTokenRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.memberRepository = memberRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
         //OAuth2User
-        CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
-        System.out.println(customUserDetails);
+        CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        System.out.println(oAuth2User);
 
-        String username = customUserDetails.getUsername();
+        String providerId = oAuth2User.getProviderId();
+
+        Member member = memberRepository.findByProviderId(providerId).orElseThrow(()-> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        System.out.println(authorities);
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
         System.out.println("Role is" + role);
-        String accessToken = jwtUtil.createJwt(username, role);
-//        response.addCookie(createCookie("Authorization", token));
-//        response.sendRedirect("http://localhost:3000");
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/LoginHandler")
-                            .queryParam("accessToken", accessToken)
-                                    .build()
-                                            .encode(StandardCharsets.UTF_8)
-                                                    .toUriString();
-            getRedirectStrategy().sendRedirect(request,response,targetUrl);
-//        sss
-        /**
-         * ROLE_GUEST(초기 로그인 이면 프로필 에딧으로
-         * ROLE_USER(한번 로그인 했으면 main page로
-         */
-//        if(role.equals("ROLE_GUEST")) {
-//            //여기가 원래는 프론트엔드 주소
-//            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/ProfileEdit")
-//                            .queryParam("accessToken", accessToken)
-//                                    .build()
-//                                            .encode(StandardCharsets.UTF_8)
-//                                                    .toUriString();
-//            getRedirectStrategy().sendRedirect(request,response,targetUrl);
-////            response.sendRedirect("http://localhost:3000/ProfileEdit");
-////              response.sendRedirect("http://localhost:8080/v1/api/join/test");
-//        }
-//
-//        else{
-//            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/MainPage")
-//                    .queryParam("accessToken", accessToken)
-//                    .build()
-//                    .encode(StandardCharsets.UTF_8)
-//                    .toUriString();
-//            getRedirectStrategy().sendRedirect(request,response,targetUrl);
-////            response.sendRedirect("http://localhost:3000/MainPage");
-////            response.sendRedirect("http://localhost:8080/my");
-//        }
+
+        String redirectUrl = getRedirectUrlByRole(MemberRole.fromKey(role));
+        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+
+        Token token = jwtTokenProvider.createToken(member.getId(), role);
+
+        //Cookie 생성
+        Cookie cookie = new Cookie("refreshtoken", token.getRefreshToken());
+        // 쿠키 속성 설정
+        cookie.setHttpOnly(true);  //httponly 옵션 설정
+        cookie.setSecure(true); //https 옵션 설정
+        cookie.setPath("/"); // 모든 곳에서 쿠키열람이 가능하도록 설정
+        cookie.setMaxAge(60 * 60 * 24); //쿠키 만료시간 설정
+
+        response.setHeader("accesstoken", token.getAccessToken());
+        response.addCookie(cookie);
+
+        //RefreshToken Reddis 저장
+        RefreshToken refreshToken = new RefreshToken(member.getId(),token.getRefreshToken());
+        refreshTokenRepository.save(refreshToken);
+
+        getRedirectStrategy().sendRedirect(request,response,redirectUrl);
     }
 
+    private String getRedirectUrlByRole(MemberRole role){
 
+        if (role == MemberRole.PREMEMBER) {
+            return UriComponentsBuilder.fromUriString(REGISTER_URL)
+                    .build()
+                    .toUriString();
+        }
+        return UriComponentsBuilder.fromHttpUrl(MAINPAGE_URL)
+                .build()
+                .toUriString();
+    }
 }

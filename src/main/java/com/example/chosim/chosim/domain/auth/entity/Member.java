@@ -32,7 +32,6 @@ public class Member extends BaseTimeEntity {
 //    @Column(name = "member_unique_id", nullable = false)
 //    private String uniqueId;
 
-
     //어떤 Social Login 인지 ex)google, naver, kakao
     @Column(name = "member_provider", nullable = false)
     private String provider;
