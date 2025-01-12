@@ -3,7 +3,6 @@ package com.example.chosim.chosim.api.member.controller;
 
 import com.example.chosim.chosim.api.member.dto.ProfileRequest;
 import com.example.chosim.chosim.api.member.dto.ProfileResponse;
-import com.example.chosim.chosim.api.member.dto.UserValidateResponse;
 import com.example.chosim.chosim.domain.auth.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
