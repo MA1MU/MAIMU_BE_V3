@@ -1,11 +1,14 @@
 package com.example.chosim.chosim.common.config;
 
 
+import com.example.chosim.chosim.common.error.handler.CustomAccessDeniedHandler;
+import com.example.chosim.chosim.common.filter.JwtAuthorizationFilter;
+import com.example.chosim.chosim.common.filter.JwtExceptionFilter;
+import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
-//import com.example.chosim.chosim.jwt.JWTFilter;
-import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.common.auth.CustomOauth2SuccessHandler;
 import com.example.chosim.chosim.common.auth.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,87 +18,75 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
-    private final JWTUtil jwtUtil;
-
-    private final MemberRepository memberRepository;
-
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomOauth2SuccessHandler customOauth2SuccessHandler, JWTUtil jwtUtil, MemberRepository memberRepository){
-        this.customOAuth2UserService = customOAuth2UserService;
-        this.customOauth2SuccessHandler = customOauth2SuccessHandler;
-        this.jwtUtil = jwtUtil;
-        this.memberRepository = memberRepository;
-    }
-
     private static final String[] WHITE_LIST = {
-            "/**",
-            "/user/join",
+//            "/**",
             "/v1/api/guest/**",
-            "/login/**",
-            "/user/validate"
+            "/v1/api/auth/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/health",
+            "/oauth2/**",      // OAuth2 관련 엔드포인트 추가
+            "/login/**"      // OAuth2 로그인 엔드포인트 추가
     };
 
     private static final String[] USER_URL = {
-            "/v1/api/group",
+            "/v1/api/member/edit",
             "/v1/api/group/**",
-            "user/**",
             "/v1/api/maimu/**"
     };
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
+    private final MemberRepository memberRepository;
+    private final CorsFilter corsFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-
-        //경로별 인가 작업
-        http
+        http.csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception ->
+                        exception.accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(WHITE_LIST).permitAll()
-                        .requestMatchers(HttpMethod.GET).permitAll()
-                        .requestMatchers(HttpMethod.GET,USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.POST,USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.PATCH, USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.DELETE, USER_URL).authenticated()
+                        .requestMatchers(HttpMethod.GET, USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.POST,USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.PATCH, USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.DELETE, USER_URL).hasRole("MEMBER")
                         .anyRequest().authenticated());
-        //csrf disable
-        http
-                .csrf(AbstractHttpConfigurer::disable);
-        //From 로그인 방식 disable
-        http
-                .formLogin(AbstractHttpConfigurer::disable);
-
-        //HTTP Basic 인증 방식 disable
-        http
-                .httpBasic(AbstractHttpConfigurer::disable);
-        http
-                .logout(AbstractHttpConfigurer::disable);
 
         http
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
-//        http
-//                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtExceptionFilter(), JwtAuthorizationFilter.class)
+                .addFilterBefore(corsFilter, JwtExceptionFilter.class);
 
-        //oauth2
-        //failure handler 추가 필요
+
+        //TODO: failure handler 추가 필요
         http
                 .oauth2Login((oauth2) -> oauth2
                         .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService))
                         .successHandler(customOauth2SuccessHandler)
-                        .failureHandler(customFailureHandler)
+//                        .failureHandler(customFailureHandler)
                 );
 
-
-
-//        세션 설정 : STATELESS
         http
-                .sessionManagement((session) -> session
+                .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
