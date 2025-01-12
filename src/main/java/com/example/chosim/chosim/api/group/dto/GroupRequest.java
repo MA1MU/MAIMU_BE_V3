@@ -9,7 +9,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class GroupCreate {
+public class GroupRequest {
 
     @NotBlank(message = "write group name.")
     private String groupName;
@@ -18,7 +18,7 @@ public class GroupCreate {
     private String groupColor;
 
     @Builder
-    public GroupCreate(String groupName, String groupColor){
+    public GroupRequest(String groupName, String groupColor){
         this.groupName = groupName;
         this.groupColor = groupColor;
     }
