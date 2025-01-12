@@ -17,7 +17,7 @@ import java.util.List;
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "members", uniqueConstraints = {
-        @UniqueConstraint(name = "MEMBER_SOCIAL_LOGIN_UNIQUE", columnNames = "member_unique_id"),
+        @UniqueConstraint(name = "MEMBER_SOCIAL_LOGIN_UNIQUE", columnNames = "member_provider_id"),
         @UniqueConstraint(name = "MEMBER_NICKNAME_UNIQUE", columnNames = "member_nickname")
 })
 public class Member extends BaseTimeEntity {
