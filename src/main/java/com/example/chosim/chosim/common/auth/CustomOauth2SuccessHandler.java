@@ -48,7 +48,7 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                                             .encode(StandardCharsets.UTF_8)
                                                     .toUriString();
             getRedirectStrategy().sendRedirect(request,response,targetUrl);
-
+//        sss
         /**
          * ROLE_GUEST(초기 로그인 이면 프로필 에딧으로
          * ROLE_USER(한번 로그인 했으면 main page로
