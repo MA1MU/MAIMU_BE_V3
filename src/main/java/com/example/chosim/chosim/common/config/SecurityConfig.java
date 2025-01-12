@@ -5,9 +5,8 @@ import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 //import com.example.chosim.chosim.jwt.JWTFilter;
 import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.common.filter.JwtAuthenticationFilter;
-import com.example.chosim.chosim.common.auth.CustomSuccessHandler;
+import com.example.chosim.chosim.common.auth.CustomOauth2SuccessHandler;
 import com.example.chosim.chosim.common.auth.CustomOAuth2UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,10 +16,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-
-import java.util.Collections;
 
 
 @Configuration
@@ -28,14 +23,14 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomSuccessHandler customSuccessHandler;
+    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
     private final JWTUtil jwtUtil;
 
     private final MemberRepository memberRepository;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, MemberRepository memberRepository){
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomOauth2SuccessHandler customOauth2SuccessHandler, JWTUtil jwtUtil, MemberRepository memberRepository){
         this.customOAuth2UserService = customOAuth2UserService;
-        this.customSuccessHandler = customSuccessHandler;
+        this.customOauth2SuccessHandler = customOauth2SuccessHandler;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
     }
@@ -58,33 +53,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        //csrf disable
-        http
-                .csrf((auth) -> auth.disable());
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
-
-        //HTTP Basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
-//        http
-//                .headers(headers-> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-        http
-                .logout(AbstractHttpConfigurer::disable);
-
-        http
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
-//        http
-//                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
-
-        //oauth2
-        http
-                .oauth2Login((oauth2) -> oauth2
-                        .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
-                                .userService(customOAuth2UserService))
-                        .successHandler(customSuccessHandler)
-                );
 
         //경로별 인가 작업
         http
@@ -96,6 +64,35 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, USER_URL).authenticated()
                         .requestMatchers(HttpMethod.DELETE, USER_URL).authenticated()
                         .anyRequest().authenticated());
+        //csrf disable
+        http
+                .csrf(AbstractHttpConfigurer::disable);
+        //From 로그인 방식 disable
+        http
+                .formLogin(AbstractHttpConfigurer::disable);
+
+        //HTTP Basic 인증 방식 disable
+        http
+                .httpBasic(AbstractHttpConfigurer::disable);
+        http
+                .logout(AbstractHttpConfigurer::disable);
+
+        http
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
+//        http
+//                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+
+        //oauth2
+        //failure handler 추가 필요
+        http
+                .oauth2Login((oauth2) -> oauth2
+                        .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
+                                .userService(customOAuth2UserService))
+                        .successHandler(customOauth2SuccessHandler)
+                        .failureHandler(customFailureHandler)
+                );
+
+
 
 //        세션 설정 : STATELESS
         http

@@ -28,12 +28,23 @@ public class Member extends BaseTimeEntity {
     private Long id;
 
     //social login 식별자
-    @Column(name = "member_unique_id", nullable = false)
-    private String uniqueId;
+    //provider + SNS 사용자 닉네임
+//    @Column(name = "member_unique_id", nullable = false)
+//    private String uniqueId;
+
+
+    //어떤 Social Login 인지 ex)google, naver, kakao
+    @Column(name = "member_provider", nullable = false)
+    private String provider;
+
+    //Social login 시 Resource Server에서 부여하는 식별 Id
+    @Column(name= "member_provider_id", nullable = false)
+    private String providerId;
 
     @Column(name = "member_name", nullable = false)
     private String name;
 
+    //SNS 이메일
     @Column(name = "member_email", nullable = false)
     private String email;
 
@@ -65,9 +76,10 @@ public class Member extends BaseTimeEntity {
     }
 
     @Builder
-    public Member(String uniqueId, String name, String email, MemberRole role,
+    public Member(String provider, String providerId, String name, String email, MemberRole role,
                   String maimuProfile, LocalDate birth, String nickName) {
-        this.uniqueId = uniqueId;
+        this.provider = provider;
+        this.providerId = providerId;
         this.name = name;
         this.email = email;
         this.role = role != null ? role : MemberRole.PREMEMBER;

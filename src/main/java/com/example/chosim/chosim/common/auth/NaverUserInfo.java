@@ -3,22 +3,23 @@ package com.example.chosim.chosim.common.auth;
 
 import java.util.Map;
 
-public class GoogleResponse implements OAuth2Response{
+
+public class NaverUserInfo implements OAuth2UserInfo{
 
     private final Map<String, Object> attribute;
 
-    public GoogleResponse(Map<String, Object> attribute) {
-        this.attribute = attribute;
+    public NaverUserInfo(Map<String, Object> attribute) {
+        this.attribute = (Map<String, Object>) attribute.get("response");
     }
 
     @Override
     public String getProvider() {
-        return "google";
+        return "naver";
     }
 
     @Override
     public String getProviderId() {
-        return attribute.get("sub").toString();
+        return attribute.get("id").toString();
     }
 
     @Override

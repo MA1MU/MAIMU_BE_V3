@@ -16,11 +16,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
-public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil) {
+    public CustomOauth2SuccessHandler(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
