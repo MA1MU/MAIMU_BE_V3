@@ -23,8 +23,13 @@ import java.util.List;
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private static final String SWAGGER_PATH = "/swagger-ui";
+    private static final String SWAGGER_PATH_3 = "/v3/api-docs";
     private static final String SWAGGER_FAVICON = "/favicon.ico";
     private static final String HEALTH_CHECK_URL = "/health";
+    private static final String LOGIN_URL = "/login";
+    private static final String OAUTH2 = "/oauth2";
+    private static final String GUEST_URL = "/v1/api/guest";
+    private static final String AUTH_URL = "/v1/api/auth";
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -51,8 +56,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith(SWAGGER_PATH) || path.startsWith(SWAGGER_FAVICON)
+        return path.startsWith(SWAGGER_PATH)
+                || path.startsWith(SWAGGER_FAVICON)
+                || path.startsWith(SWAGGER_PATH_3)
                 || path.startsWith(HEALTH_CHECK_URL)
+                || path.startsWith(LOGIN_URL)
+                || path.startsWith(OAUTH2)
+                || path.startsWith(GUEST_URL)
+                || path.startsWith(AUTH_URL)
                 ;
     }
 }
