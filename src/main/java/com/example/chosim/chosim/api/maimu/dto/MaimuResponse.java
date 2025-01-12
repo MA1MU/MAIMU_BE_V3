@@ -7,31 +7,30 @@ import lombok.Getter;
 @Getter
 public class MaimuResponse {
 
-    private final Long id;
     private final String title;
     private final String message;
     private final String maimuColor;
     private final String writerName;
     private final Integer sugarContent;
-
-
+    private final boolean isAnonymous;
 
     public MaimuResponse(Maimu maimu){
-        this.id = maimu.getId();
         this.title = maimu.getTitle();
         this.message = maimu.getMessage();
-        this.maimuColor = maimu.getMaimuColor();
+        this.maimuColor = maimu.getMaimuColor().toString();
         this.writerName = maimu.getWriterName();
         this.sugarContent = maimu.getSugarContent();
+        this.isAnonymous = maimu.isAnonymous();
     }
 
     @Builder
-    public MaimuResponse(Long id, String title, String message, String maimuColor, String writerName, Integer sugarContent){
-        this.id = id;
+    public MaimuResponse(String title, String message, String maimuColor,
+                         String writerName, Integer sugarContent, boolean isAnonymous) {
         this.title = title;
         this.message = message;
         this.maimuColor = maimuColor;
         this.writerName = writerName;
         this.sugarContent = sugarContent;
+        this.isAnonymous = isAnonymous;
     }
 }
