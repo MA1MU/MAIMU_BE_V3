@@ -5,7 +5,7 @@ import com.example.chosim.chosim.domain.auth.entity.Member;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.common.jwt.JWTUtil;
 import com.example.chosim.chosim.common.auth.CustomOAuth2User;
-import com.example.chosim.chosim.common.auth.UserDTO;
+import com.example.chosim.chosim.common.auth.MemberDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,14 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Member user = memberRepository.findByUsername(jwtUtil.getUsername(accessToken))
                     .orElseThrow(IllegalStateException::new);
 
-            UserDTO userDTO = UserDTO.builder()
+            MemberDTO memberDTO = MemberDTO.builder()
                     .role(user.getRole())
                     .name(user.getName())
                     .username(user.getUsername())
                     .email(user.getEmail())
                     .build();
 
-            CustomOAuth2User customOAuth2User = new CustomOAuth2User(userDTO);
+            CustomOAuth2User customOAuth2User = new CustomOAuth2User(memberDTO);
             //스프링 시큐리티 인증 토큰 생성
             Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
             //세션에 사용자 등록

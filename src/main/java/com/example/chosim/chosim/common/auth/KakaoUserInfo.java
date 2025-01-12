@@ -2,12 +2,12 @@ package com.example.chosim.chosim.common.auth;
 
 import java.util.Map;
 
-public class KakaoResponse implements OAuth2Response{
+public class KakaoUserInfo implements OAuth2UserInfo{
 
     private final Map<String, Object> attribute;
 
 
-    public KakaoResponse(Map<String, Object> attribute) {
+    public KakaoUserInfo(Map<String, Object> attribute) {
         this.attribute = attribute;
     }
 
