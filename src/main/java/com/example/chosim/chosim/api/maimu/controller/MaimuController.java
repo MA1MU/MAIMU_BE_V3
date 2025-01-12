@@ -32,7 +32,7 @@ public class MaimuController {
     public ResponseEntity<PageMaimuResponse> getList(@PathVariable Long groupId, @RequestParam(defaultValue = "0") int page){
         Page<MaimuResponse> maimuPage = maimuService.getList(groupId, page);
         PageMaimuResponse response = new PageMaimuResponse(maimuPage);
-        return ResponseEntity.status(HttpStatus.OK).build(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     
     //마이무 1개 내용 보기
