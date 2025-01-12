@@ -15,8 +15,8 @@ import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
-@Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"userEntity_id", "groupName"} )})
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"member_id", "group_name"} )})
 public class Group {
 
     @Id
@@ -52,8 +52,8 @@ public class Group {
     }
 
     public void edit (GroupEditor groupEditor){
-        groupName = groupEditor.getGroupName();
-        groupColor = groupEditor.getGroupColor();
+        this.groupName = groupEditor.getGroupName();
+        this.groupColor = groupEditor.getGroupColor();
     }
 
     public void addMaimu(Maimu maimu){
