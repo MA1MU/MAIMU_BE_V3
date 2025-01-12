@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.domain.group.entity;
 
+import com.example.chosim.chosim.common.entity.BaseTimeEntity;
 import com.example.chosim.chosim.domain.group.service.GroupEditor;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.domain.auth.entity.Member;
@@ -17,7 +18,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"member_id", "group_name"} )})
-public class Group {
+public class Group extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
