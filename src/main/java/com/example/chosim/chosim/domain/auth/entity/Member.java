@@ -51,7 +51,7 @@ public class Member extends BaseTimeEntity {
     @Column(name = "member_nickname")
     private String nickName;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userEntity")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "member")
     private List<Group> groups = new ArrayList<>();
 
     public void updateRole(MemberRole role) {
