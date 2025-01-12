@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
-    private final JWTUtil jwtUtil;
 
     @PostMapping("/join")
     @Operation(summary = "프로필 입력 회원가입", description = "소셜 로그인 후 프로필 정보를 입력합니다.")

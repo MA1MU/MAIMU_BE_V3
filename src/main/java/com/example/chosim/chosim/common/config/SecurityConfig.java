@@ -4,7 +4,6 @@ package com.example.chosim.chosim.common.config;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 //import com.example.chosim.chosim.jwt.JWTFilter;
 import com.example.chosim.chosim.common.jwt.JWTUtil;
-import com.example.chosim.chosim.common.filter.JwtAuthenticationFilter;
 import com.example.chosim.chosim.common.auth.CustomOauth2SuccessHandler;
 import com.example.chosim.chosim.common.auth.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
