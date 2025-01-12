@@ -19,6 +19,12 @@ public enum ErrorCode {
     //로그인 AUTH
     JWT_NOT_EXISTS(HttpStatus.UNAUTHORIZED, "T-001", "Jwt 토큰이 존재하지 않습니다."),
     LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "T-002", "로그인 요청에 실패했습니다."),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "T-003", "이미 만료된 토큰입니다."),
+    FILTER_EXCEPTION(HttpStatus.UNAUTHORIZED, "T-004", "필터 내부에러 발생"),
+    JWT_FORM_ERROR(HttpStatus.UNAUTHORIZED, "T-005", "jwt 형식 에러 발생"),
+    REFRESH_TOKEN_NOT_EXIST(HttpStatus.UNAUTHORIZED, "T-006", "해당 리프레시 토큰이 DB에 존재하지 않습니다."),
+    REISSUE_FAIL(HttpStatus.UNAUTHORIZED, "T-007", "액세스 토큰 재발급 요청 실패"),
+    MEMBER_INFO_NOT_FOUND(HttpStatus.UNAUTHORIZED, "T-008", "로그인된 사용자 정보를 가져올 수 없습니다."),
 
     //Group
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "G-001", "그룹을 찾을 수 없습니다."),
