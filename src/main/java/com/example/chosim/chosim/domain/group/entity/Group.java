@@ -17,7 +17,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"member_id", "group_name"} )})
+@Table(name ="lockers", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"member_id", "group_name"} )})
 public class Group extends BaseTimeEntity {
 
     @Id
@@ -55,6 +55,10 @@ public class Group extends BaseTimeEntity {
     public void edit (GroupEditor groupEditor){
         this.groupName = groupEditor.getGroupName();
         this.groupColor = groupEditor.getGroupColor();
+    }
+
+    public void setMember(Member member){
+        this.member = member;
     }
 
     public void addMaimu(Maimu maimu){
