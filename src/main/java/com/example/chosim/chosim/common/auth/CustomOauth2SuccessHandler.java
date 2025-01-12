@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -25,8 +26,10 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
+@RequiredArgsConstructor
 public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
+    private static final int REFRESH_TOKEN_AGE = 259200;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -34,18 +37,17 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     private final String REGISTER_URL= "http://localhost:3000/ProfileEdit";
     private final String MAINPAGE_URL = "http://localhost:3000/MainPage";
 
-    public CustomOauth2SuccessHandler(JwtTokenProvider jwtTokenProvider, MemberRepository memberRepository, RefreshTokenRepository refreshTokenRepository) {
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.memberRepository = memberRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-    }
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
         //OAuth2User
-        CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-        System.out.println(oAuth2User);
+        CustomOAuth2User principal = (CustomOAuth2User) authentication.getPrincipal();
+        String grantedAuthority = authentication.getAuthorities().stream()
+                .findAny()
+                .orElseThrow()
+                .toString();
+
+        Token token = jwtTokenProvider.createToken(principal.get)
 
         String providerId = oAuth2User.getProviderId();
 
