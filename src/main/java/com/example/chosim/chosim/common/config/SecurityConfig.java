@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.CorsFilter;
 
 
@@ -63,7 +64,9 @@ public class SecurityConfig {
                         exception.accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                         .requestMatchers(WHITE_LIST).permitAll()
+                        .requestMatchers("/v1/api/member/join").hasRole("PREMEMBER")
                         .requestMatchers(HttpMethod.GET, USER_URL).hasRole("MEMBER")
                         .requestMatchers(HttpMethod.POST,USER_URL).hasRole("MEMBER")
                         .requestMatchers(HttpMethod.PATCH, USER_URL).hasRole("MEMBER")
