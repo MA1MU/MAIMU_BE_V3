@@ -7,7 +7,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
+//import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +19,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secretkey}")
+    @Value("${jwt.secretKey")
     String secretKey;
 
     @Value("${jwt.access.expiration}")
@@ -47,22 +49,6 @@ public class JwtTokenProvider {
 
     public String getBearer(String authorizationHeader) {
         return authorizationHeader.replace("Bearer ", "");
-    }
-
-    public String getRole(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("role", String.class);
-    }
-
-    public String getType(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("type", String.class);
     }
 
     public Token createToken(Long id, String authority){
@@ -108,15 +94,13 @@ public class JwtTokenProvider {
     }
 
     public Long getExpiration(String token) {
-        Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
         return claims.getExpiration().getTime() - new Date().getTime();
     }
 
-    public void checkMemberExist(Long id) {
-        if (!memberRepository.existsById(id)) {
-            throw new FilterAuthenticationException("존재하지 않는 회원입니다.");
-        }
-    }
 
     public void validateAccessToken(String accessToken) {
         if (!TokenConstants.ACCESS_TOKEN.equals(getType(accessToken))) {
@@ -127,12 +111,37 @@ public class JwtTokenProvider {
         }
     }
 
+    public String getType(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("type", String.class);
+    }
+
     private boolean isBlocked(final String token) {
         return blackListRepository.existsById(token);
     }
 
     public Long getMemberId(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
-                .getBody().get("id", Long.class);
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("id", Long.class);
+    }
+
+    public String getRole(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
+    }
+
+    public void checkMemberExist(Long id) {
+        if (!memberRepository.existsById(id)) {
+            throw new FilterAuthenticationException("존재하지 않는 회원입니다.");
+        }
     }
 }

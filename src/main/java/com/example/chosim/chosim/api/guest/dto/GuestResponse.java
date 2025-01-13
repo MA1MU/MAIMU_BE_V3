@@ -1,4 +1,4 @@
-package com.example.chosim.chosim.api.group.dto;
+package com.example.chosim.chosim.api.guest.dto;
 
 import com.example.chosim.chosim.domain.group.entity.Group;
 import lombok.Builder;

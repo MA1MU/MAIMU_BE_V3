@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.domain.group.entity;
 
+import com.example.chosim.chosim.common.entity.BaseTimeEntity;
 import com.example.chosim.chosim.domain.group.service.GroupEditor;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.domain.auth.entity.Member;
@@ -15,9 +16,9 @@ import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
-@Table(name ="groups", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"userEntity_id", "groupName"} )})
-public class Group {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name ="lockers", uniqueConstraints = {@UniqueConstraint( name = "NAME_UNIQUE", columnNames = {"member_id", "group_name"} )})
+public class Group extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +32,7 @@ public class Group {
     private String groupColor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userEntity_id")
+    @JoinColumn(name = "member_id")
     private Member member;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "group")
@@ -52,18 +53,17 @@ public class Group {
     }
 
     public void edit (GroupEditor groupEditor){
-        groupName = groupEditor.getGroupName();
-        groupColor = groupEditor.getGroupColor();
+        this.groupName = groupEditor.getGroupName();
+        this.groupColor = groupEditor.getGroupColor();
+    }
+
+    public void setMember(Member member){
+        this.member = member;
     }
 
     public void addMaimu(Maimu maimu){
         maimu.updateGroup(this);
         this.maimus.add(maimu);
-    }
-
-    public void setMember(Member member){
-        this.member = member;
-        member.getGroups().add(this);
     }
 
 }

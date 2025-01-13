@@ -1,13 +1,14 @@
 package com.example.chosim.chosim.common.config;
 
 
+import com.example.chosim.chosim.common.error.handler.CustomAccessDeniedHandler;
+import com.example.chosim.chosim.common.filter.JwtAuthorizationFilter;
+import com.example.chosim.chosim.common.filter.JwtExceptionFilter;
+import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
-//import com.example.chosim.chosim.jwt.JWTFilter;
-import com.example.chosim.chosim.common.jwt.JWTUtil;
-import com.example.chosim.chosim.common.filter.JwtAuthenticationFilter;
-import com.example.chosim.chosim.common.auth.CustomSuccessHandler;
+import com.example.chosim.chosim.common.auth.CustomOauth2SuccessHandler;
 import com.example.chosim.chosim.common.auth.CustomOAuth2UserService;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,89 +18,78 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-
-import java.util.Collections;
+import org.springframework.web.cors.CorsUtils;
+import org.springframework.web.filter.CorsFilter;
 
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomSuccessHandler customSuccessHandler;
-    private final JWTUtil jwtUtil;
-
-    private final MemberRepository memberRepository;
-
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, MemberRepository memberRepository){
-        this.customOAuth2UserService = customOAuth2UserService;
-        this.customSuccessHandler = customSuccessHandler;
-        this.jwtUtil = jwtUtil;
-        this.memberRepository = memberRepository;
-    }
-
     private static final String[] WHITE_LIST = {
-            "/**",
-            "/user/join",
+//            "/**",
             "/v1/api/guest/**",
-            "/login/**",
-            "/user/validate"
+            "/v1/api/auth/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/health",
+            "/oauth2/**",      // OAuth2 관련 엔드포인트 추가
+            "/login/**"      // OAuth2 로그인 엔드포인트 추가
     };
 
     private static final String[] USER_URL = {
-            "/v1/api/group",
+            "/v1/api/member/edit",
             "/v1/api/group/**",
-            "user/**",
             "/v1/api/maimu/**"
     };
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
+    private final MemberRepository memberRepository;
+    private final CorsFilter corsFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        //csrf disable
-        http
-                .csrf((auth) -> auth.disable());
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
+        http.csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception ->
+                        exception.accessDeniedHandler(customAccessDeniedHandler)
+                )
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+                        .requestMatchers(WHITE_LIST).permitAll()
+                        .requestMatchers("/v1/api/member/join").hasRole("PREMEMBER")
+                        .requestMatchers(HttpMethod.GET, USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.POST,USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.PATCH, USER_URL).hasRole("MEMBER")
+                        .requestMatchers(HttpMethod.DELETE, USER_URL).hasRole("MEMBER")
+                        .anyRequest().authenticated());
 
-        //HTTP Basic 인증 방식 disable
         http
-                .httpBasic((auth) -> auth.disable());
-//        http
-//                .headers(headers-> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-        http
-                .logout(AbstractHttpConfigurer::disable);
+                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtExceptionFilter(), JwtAuthorizationFilter.class)
+                .addFilterBefore(corsFilter, JwtExceptionFilter.class);
 
-        http
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
-//        http
-//                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
-        //oauth2
+        //TODO: failure handler 추가 필요
         http
                 .oauth2Login((oauth2) -> oauth2
                         .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService))
-                        .successHandler(customSuccessHandler)
+                        .successHandler(customOauth2SuccessHandler)
+//                        .failureHandler(customFailureHandler)
                 );
 
-        //경로별 인가 작업
         http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers(WHITE_LIST).permitAll()
-                        .requestMatchers(HttpMethod.GET).permitAll()
-                        .requestMatchers(HttpMethod.GET,USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.POST,USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.PATCH, USER_URL).authenticated()
-                        .requestMatchers(HttpMethod.DELETE, USER_URL).authenticated()
-                        .anyRequest().authenticated());
-
-//        세션 설정 : STATELESS
-        http
-                .sessionManagement((session) -> session
+                .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();

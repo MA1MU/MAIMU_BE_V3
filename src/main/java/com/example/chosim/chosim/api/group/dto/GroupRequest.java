@@ -9,16 +9,16 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class GroupCreate {
+public class GroupRequest {
 
-    @NotBlank(message = "write group name.")
+    @NotBlank(message = "그룹 이름을 작성해 주세요")
     private String groupName;
 
-    @NotBlank(message = "write group color.")
+    @NotBlank(message = "그룹 색깔을 지정해 주세요")
     private String groupColor;
 
     @Builder
-    public GroupCreate(String groupName, String groupColor){
+    public GroupRequest(String groupName, String groupColor){
         this.groupName = groupName;
         this.groupColor = groupColor;
     }
