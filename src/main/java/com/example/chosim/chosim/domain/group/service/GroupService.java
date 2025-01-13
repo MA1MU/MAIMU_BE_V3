@@ -1,18 +1,13 @@
 package com.example.chosim.chosim.domain.group.service;
 
-import com.example.chosim.chosim.domain.auth.entity.UserEntity;
-import com.example.chosim.chosim.domain.auth.repository.UserRepository;
+import com.example.chosim.chosim.domain.auth.entity.Member;
+import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.domain.group.entity.Group;
-import com.example.chosim.chosim.domain.group.entity.GroupEditor;
-import com.example.chosim.chosim.api.member.dto.GuestRequest;
-import com.example.chosim.chosim.api.group.dto.GroupCreate;
-import com.example.chosim.chosim.api.group.dto.GroupEdit;
+import com.example.chosim.chosim.api.group.dto.GroupRequest;
 import com.example.chosim.chosim.api.group.dto.GroupResponse;
-import com.example.chosim.chosim.api.group.dto.GuestResponse;
-import com.example.chosim.chosim.exception.GroupNotFound;
-import com.example.chosim.chosim.exception.InvalidRequest;
-import com.example.chosim.chosim.exception.UserEntityNotFound;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,31 +20,44 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GroupService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
+    private final EntityManager entityManger;
 
-    public void createGroup(String username, GroupCreate groupCreate){
-        UserEntity userEntity = userRepository.findByUsername(username)
-                .orElseThrow(UserEntityNotFound::new);
+    @Transactional
+    public GroupResponse createGroup(Long memberId, GroupRequest groupRequest){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("Member엔티티를 찾을 수 없음."));
 
         Group group = Group.builder()
-                .groupName(groupCreate.getGroupName())
-                .groupColor(groupCreate.getGroupColor())
+                .groupName(groupRequest.getGroupName())
+                .groupColor(groupRequest.getGroupColor())
                 .build();
-        group.setUserEntity(userEntity);
+        group.setMember(member);
 
         try{
-            groupRepository.save(group);
+            Group savedGroup = groupRepository.save(group);
+            return new GroupResponse(savedGroup);
         }catch (DataIntegrityViolationException e){
-            throw new InvalidRequest();
+            throw new DataIntegrityViolationException("데이터 무결성 위반으로 저장 실패");
         }
     }
 
-    public GroupResponse get(Long id){
+    public List<GroupResponse> getList(Long memberId){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("Member엔티티를 찾을 수 없음."));
+
+        return groupRepository.findByMember_IdOrderByIdAsc(member.getId()).stream()
+                .map(GroupResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public GroupResponse getGroup(Long id){
         Group group = groupRepository.findById(id)
-                .orElseThrow(GroupNotFound::new);
+                .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
 
         return GroupResponse.builder()
                 .id(group.getId())
@@ -58,52 +66,28 @@ public class GroupService {
                 .build();
     }
 
-    public List<GroupResponse> getList(String username){
-        UserEntity userEntity = userRepository.findByUsername(username)
-                .orElseThrow(UserEntityNotFound::new);
-
-        return groupRepository.findByUserEntity_IdOrderByIdAsc(userEntity.getId()).stream()
-                .map(GroupResponse::new)
-                .collect(Collectors.toList());
-    }
-
-    public GuestResponse getForGuest(GuestRequest request){
-
-        UserEntity userEntity = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(UserEntityNotFound::new);
-
-        Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(GroupNotFound::new);
-
-        return GuestResponse.builder()
-                .id(group.getId())
-                .groupName(group.getGroupName())
-                .groupColor(group.getGroupColor())
-                .maimuCount(group.getMaimus().size())
-                .build();
-    }
-
-
     @Transactional
-    public void edit(Long id, GroupEdit groupEdit){
+    public GroupResponse editGroup(Long id, GroupRequest groupRequest){
         Group group = groupRepository.findById(id)
-                .orElseThrow(GroupNotFound::new);
+                .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
 
         GroupEditor.GroupEditorBuilder groupEditorBuilder = group.toEditor();
 
         GroupEditor groupEditor = groupEditorBuilder
-                .groupName(groupEdit.getGroupName())
-                .groupColor(groupEdit.getGroupColor())
+                .groupName(groupRequest.getGroupName())
+                .groupColor(groupRequest.getGroupColor())
                 .build();
         group.edit(groupEditor);
+        return new GroupResponse(group);
     }
 
-    public void delete(Long id){
+    //TODO: Group List에서 지우는 방법 말고 다른 방법 생각해보기
+    @Transactional
+    public void deleteGroup(Long id){
         Group group = groupRepository.findById(id)
-                .orElseThrow(GroupNotFound::new);
+                .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
+        entityManger.refresh(group);
         groupRepository.delete(group);
     }
-
-
 }
 
