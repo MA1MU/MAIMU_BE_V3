@@ -21,8 +21,8 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-//                .addServersItem(new Server().url("https://quostomize.site").description("운영 서버"))
-//                .addServersItem(new Server().url("http://13.124.43.174:8080").description("AWS Server"))
+                .addServersItem(new Server().url("https://apimaimu.site").description("운영 서버"))
+                .addServersItem(new Server().url("http://3.39.127.158:8080").description("AWS Server"))
                 .addServersItem(new Server().url("http://localhost:8080").description("개발자 로컬 서버"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components().addSecuritySchemes("bearerAuth",
