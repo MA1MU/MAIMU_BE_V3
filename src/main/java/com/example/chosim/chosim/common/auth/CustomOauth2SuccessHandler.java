@@ -48,26 +48,37 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                 .findAny()
                 .orElseThrow()
                 .toString();
+        MemberRole checkRole = MemberRole.fromKey(grantedAuthority);
         Token token = jwtTokenProvider.createToken(principal.getMember().getId(), grantedAuthority);
-        String accessToken = token.getAccessToken();
-        response.addHeader("accessToken", accessToken);
 
-        RefreshToken refreshToken = new RefreshToken(principal.getMember().getId(), token.getRefreshToken());
-        refreshToken.updateRefreshToken(token.getRefreshToken());
-        refreshTokenRepository.save(refreshToken);
+        String redirectUrl = getRedirectUrlByRole(checkRole);
 
-        Cookie cookie = new Cookie("refreshToken", token.getRefreshToken());
-        cookie.setPath("/");
-        ZonedDateTime seoulTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-        ZonedDateTime expirationTime = seoulTime.plusSeconds(REFRESH_TOKEN_AGE);
-        cookie.setMaxAge((int) (expirationTime.toEpochSecond() - seoulTime.toEpochSecond()));
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
+        //MemberRole에 따른 분기 처리
+        if (checkRole == MemberRole.PREMEMBER) {
+            String tempToken = token.getAccessToken();
+            response.addHeader("tempToken", tempToken);
+            log.info("회원가입 페이지로 redirect, JWT 임시 토큰 생성");
+        }
+        else {
+            String accessToken = token.getAccessToken();
+            response.addHeader("accessToken", accessToken);
 
-        String redirectUrl = getRedirectUrlByRole(MemberRole.fromKey(grantedAuthority));
+            RefreshToken refreshToken = new RefreshToken(principal.getMember().getId(), token.getRefreshToken());
+            refreshToken.updateRefreshToken(token.getRefreshToken());
+            refreshTokenRepository.save(refreshToken);
+
+            Cookie cookie = new Cookie("refreshToken", token.getRefreshToken());
+            cookie.setPath("/");
+            ZonedDateTime seoulTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+            ZonedDateTime expirationTime = seoulTime.plusSeconds(REFRESH_TOKEN_AGE);
+            cookie.setMaxAge((int) (expirationTime.toEpochSecond() - seoulTime.toEpochSecond()));
+            cookie.setSecure(true);
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
+
+            log.info("기존 회원 로그인 성공, accessToken 및 refreshToken 생성");
+        }
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-        log.info("로그인 성공, JWT 토큰 생성");
     }
 
     private String getRedirectUrlByRole(MemberRole role){
