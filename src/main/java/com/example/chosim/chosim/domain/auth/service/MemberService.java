@@ -2,6 +2,10 @@ package com.example.chosim.chosim.domain.auth.service;
 
 
 import com.example.chosim.chosim.api.member.dto.ProfileResponse;
+import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
+import com.example.chosim.chosim.common.jwt.RefreshToken;
+import com.example.chosim.chosim.common.jwt.RefreshTokenRepository;
+import com.example.chosim.chosim.common.jwt.Token;
 import com.example.chosim.chosim.domain.auth.component.MemberReader;
 import com.example.chosim.chosim.domain.auth.entity.Member;
 import com.example.chosim.chosim.api.member.dto.ProfileRequest;
@@ -11,12 +15,16 @@ import com.example.chosim.chosim.common.error.exception.AppException;
 import com.example.chosim.chosim.common.error.ErrorCode;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
 import com.example.chosim.chosim.domain.maimu.repository.MaimuRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Slf4j
 @Service
@@ -28,15 +36,38 @@ public class MemberService {
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
     private final MemberReader memberReader;
-    
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private static final int REFRESH_TOKEN_AGE = 259200;
+
     //소셜 로그인으로 회원가입 후, 프로필 정보 입력
     @Transactional
-    public void joinMember(ProfileRequest request, Long memberId){
+    public void joinMember(ProfileRequest request, Long memberId, HttpServletResponse response){
         validateDuplicatemaimuName(request.getNickName());
         log.info("마이무 별명 검증 완료 : {}", request.getNickName());
         Member member = memberReader.findById(memberId);
         member.updateMaimuInfo(request.getMaimuProfile(), request.getBirth(), request.getNickName());
         member.updateRole(MemberRole.MEMBER);
+
+        //토큰 재발급
+        Token token = jwtTokenProvider.createToken(memberId, MemberRole.MEMBER.getKey());
+        String accessToken = token.getAccessToken();
+        response.addHeader("accessToken", accessToken);
+
+        RefreshToken refreshToken = new RefreshToken(member.getId(), token.getRefreshToken());
+        refreshToken.updateRefreshToken(token.getRefreshToken());
+        refreshTokenRepository.save(refreshToken);
+
+        Cookie cookie = new Cookie("refreshToken", token.getRefreshToken());
+        cookie.setPath("/");
+        ZonedDateTime seoulTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime expirationTime = seoulTime.plusSeconds(REFRESH_TOKEN_AGE);
+        cookie.setMaxAge((int) (expirationTime.toEpochSecond() - seoulTime.toEpochSecond()));
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+        
         memberRepository.save(member);
     }
 
