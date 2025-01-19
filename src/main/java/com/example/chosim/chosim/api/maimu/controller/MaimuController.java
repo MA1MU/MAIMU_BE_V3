@@ -49,5 +49,7 @@ public class MaimuController {
         maimuService.deleteMaimu(maimuId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
+    
+    //TODO: Maimu 즐겨찾기 추가하기
 
 }
