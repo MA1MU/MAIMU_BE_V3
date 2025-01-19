@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class MaimuService {
 
     private final MaimuRepository maimuRepository;
-    private final GroupRepository groupRepository;
 
     public Page<MaimuResponse> getList(Long groupId, int page){
         Pageable pageable = PageRequest.of(page, 18);
