@@ -35,8 +35,11 @@ public enum ErrorCode {
 
     //상위 예외 처리
     GENERAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-001", "예상치 못한 오류가 발생했습니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "서버 내부 오류가 발생했습니다.");
-    
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "서버 내부 오류가 발생했습니다."),
+
+    //SQL 에러
+    DATA_INTEGRITY_ERROR(HttpStatus.BAD_REQUEST, "S-001", "데이터 참조 무결성 오류가 발생했습니다.");
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
