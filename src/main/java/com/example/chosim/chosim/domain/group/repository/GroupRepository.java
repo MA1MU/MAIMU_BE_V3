@@ -43,4 +43,12 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT g FROM Group g WHERE g.id = :id")
     Optional<Group> findByIdWithLock(@Param("id") Long id);
+
+
+    //링크 생성 시에 개수 확인 이후 100개 이상이면 링크 보내는 것 막아야함
+    @Query("SELECT COUNT(m) " +
+            "FROM Group g " +
+            "LEFT JOIN g.maimus m " +
+            "WHERE g.id = :groupId")
+    Long countTotalMaimusByGroupId(@Param("groupId") Long groupId);
 }

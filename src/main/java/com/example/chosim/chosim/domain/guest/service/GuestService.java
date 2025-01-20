@@ -15,8 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly=true)
 public class GuestService {
 
-//    private final GroupRepository groupRepository;
-//    private final MaimuRepository maimuRepository;
+    private final GroupRepository groupRepository;
+    private final MaimuRepository maimuRepository;
+
+    @Transactional
+    public void writeMaimu(Long groupId, GuestRequest guestRequest){
+
+    }
 //
 //    @Transactional
 //    public void writeMaimu(Long groupId, GuestRequest guestRequest){
