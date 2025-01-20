@@ -34,8 +34,13 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(memberService.updateMemberProfile(request, memberId));
     }
 
-    
-    //TODO: 회원 탈퇴 로직 다시 만들어야 함
+
+    @DeleteMapping
+    @Operation(summary = "회원 탈퇴", description = "회원 정보와 연관된 모든 데이터를 삭제합니다.")
+    public ResponseEntity<Void> deleteMember(@AuthenticationPrincipal Long memberId) {
+        memberService.deleteMember(memberId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 
 
 }

@@ -9,21 +9,24 @@ import java.util.List;
 
 @Getter
 public class GroupResponse {
-
     private final Long id;
     private final String groupName;
     private final String groupColor;
+    private final Long unreadMaimuCount;
 
-    public GroupResponse(Group group){
-        this.id = group.getId();
-        this.groupName = group.getGroupName();
-        this.groupColor = group.getGroupColor();
-    }
-
-    @Builder
-    public GroupResponse(Long id, String groupName, String groupColor, List<Maimu> maimus){
+    public GroupResponse(Long id, String groupName, String groupColor, Long unreadMaimuCount) {
         this.id = id;
         this.groupName = groupName.substring(0, Math.min(groupName.length(), 20));
         this.groupColor = groupColor;
+        this.unreadMaimuCount = unreadMaimuCount != null ? unreadMaimuCount : 0L;
+    }
+
+    public static GroupResponse from(Group group) {
+        return new GroupResponse(
+                group.getId(),
+                group.getGroupName(),
+                group.getGroupColor(),
+                0L
+        );
     }
 }

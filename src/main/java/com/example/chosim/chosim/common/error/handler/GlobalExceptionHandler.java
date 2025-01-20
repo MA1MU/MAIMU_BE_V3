@@ -7,6 +7,7 @@ import com.example.chosim.chosim.common.error.response.MethodArgumentErrorRespon
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -63,6 +64,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND, request);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleInternalServerError(DataIntegrityViolationException e, HttpServletRequest request) {
+        log.error("RuntimeException 발생: {}", e.getMessage());
+        log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.DATA_INTEGRITY_ERROR, request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     // 서버 내부 예외 처리 핸들러

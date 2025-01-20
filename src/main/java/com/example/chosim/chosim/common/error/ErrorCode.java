@@ -16,7 +16,7 @@ public enum ErrorCode {
     NICKNAME_DUPLICATE(HttpStatus.CONFLICT, "M-001", "해당 닉네임을 가진 사용자가 존재합니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"M-002", "해당 회원이 존재하지 않습니다."),
     LOGIN_ID_NOT_FOUND(HttpStatus.NOT_FOUND, "M-003", "해당 아이디가 존재하지 않습니다."),
-
+    DELETE_MEMBER_FAILED(HttpStatus.CONFLICT, "M-004", "회원탈퇴도중 실패했습니다."),
     //로그인 AUTH
     JWT_NOT_EXISTS(HttpStatus.UNAUTHORIZED, "T-001", "Jwt 토큰이 존재하지 않습니다."),
     LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "T-002", "로그인 요청에 실패했습니다."),
@@ -35,8 +35,11 @@ public enum ErrorCode {
 
     //상위 예외 처리
     GENERAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-001", "예상치 못한 오류가 발생했습니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "서버 내부 오류가 발생했습니다.");
-    
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "서버 내부 오류가 발생했습니다."),
+
+    //SQL 에러
+    DATA_INTEGRITY_ERROR(HttpStatus.BAD_REQUEST, "S-001", "데이터 참조 무결성 오류가 발생했습니다.");
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
