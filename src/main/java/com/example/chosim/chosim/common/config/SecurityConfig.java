@@ -38,7 +38,8 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/health",
             "/oauth2/**",      // OAuth2 관련 엔드포인트 추가
-            "/login/**"      // OAuth2 로그인 엔드포인트 추가
+            "/login/**",      // OAuth2 로그인 엔드포인트 추가
+            "/v1/api/guest"
     };
 
     private static final String[] USER_URL = {
