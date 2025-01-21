@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public class MaimuResponse {
 
+    private final Long maimuId;
     private final String title;
     private final String message;
     private final String maimuColor;
@@ -16,6 +17,7 @@ public class MaimuResponse {
     private final boolean isFavorite;
 
     public MaimuResponse(Maimu maimu){
+        this.maimuId = maimu.getId();
         this.title = maimu.getTitle();
         this.message = maimu.getMessage();
         this.maimuColor = maimu.getMaimuColor().toString();
@@ -27,8 +29,9 @@ public class MaimuResponse {
     }
 
     @Builder
-    public MaimuResponse(String title, String message, String maimuColor,
+    public MaimuResponse(Long maimuId, String title, String message, String maimuColor,
                          String writerName, Integer sugarContent, boolean isAnonymous, boolean isFavorite) {
+        this.maimuId = maimuId;
         this.title = title;
         this.message = message;
         this.maimuColor = maimuColor;
