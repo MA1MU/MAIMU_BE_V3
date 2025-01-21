@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.domain.maimu.service;
 
+import com.example.chosim.chosim.api.maimu.dto.MaimuFavoriteResponse;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.api.maimu.dto.MaimuResponse;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
@@ -40,6 +41,17 @@ public class MaimuService {
         Maimu maimu = maimuRepository.findById(maimuId)
                 .orElseThrow(() -> new EntityNotFoundException("Maimu엔티티를 찾을 수 없음"));
         maimuRepository.delete(maimu);
+    }
+
+    @Transactional
+    public MaimuFavoriteResponse updateFavorite(Long maimuId){
+        Maimu maimu = maimuRepository.findById(maimuId)
+                .orElseThrow(() -> new EntityNotFoundException("Maimu엔티티를 찾을 수 없음"));
+        maimu.toggleFavorite();
+
+        maimuRepository.save(maimu);
+
+        return new MaimuFavoriteResponse(maimu.isFavorite());
     }
     
 }

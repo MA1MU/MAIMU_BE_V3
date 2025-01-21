@@ -13,6 +13,7 @@ public class MaimuResponse {
     private final String writerName;
     private final Integer sugarContent;
     private final boolean isAnonymous;
+    private final boolean isFavorite;
 
     public MaimuResponse(Maimu maimu){
         this.title = maimu.getTitle();
@@ -21,16 +22,19 @@ public class MaimuResponse {
         this.writerName = maimu.getWriterName();
         this.sugarContent = maimu.getSugarContent();
         this.isAnonymous = maimu.isAnonymous();
+
+        this.isFavorite = maimu.isFavorite();
     }
 
     @Builder
     public MaimuResponse(String title, String message, String maimuColor,
-                         String writerName, Integer sugarContent, boolean isAnonymous) {
+                         String writerName, Integer sugarContent, boolean isAnonymous, boolean isFavorite) {
         this.title = title;
         this.message = message;
         this.maimuColor = maimuColor;
         this.writerName = writerName;
         this.sugarContent = sugarContent;
         this.isAnonymous = isAnonymous;
+        this.isFavorite = isFavorite;
     }
 }
