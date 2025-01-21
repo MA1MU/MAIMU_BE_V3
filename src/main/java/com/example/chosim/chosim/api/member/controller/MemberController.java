@@ -6,6 +6,7 @@ import com.example.chosim.chosim.api.member.dto.ProfileResponse;
 import com.example.chosim.chosim.domain.auth.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,8 @@ public class MemberController {
 
     @PostMapping("/join")
     @Operation(summary = "프로필 입력 회원가입", description = "소셜 로그인 후 프로필 정보를 입력합니다.")
-    public ResponseEntity<Void> joinMember(@AuthenticationPrincipal Long memberId, @RequestBody ProfileRequest request){
-        memberService.joinMember(request, memberId);
+    public ResponseEntity<Void> joinMember(@AuthenticationPrincipal Long memberId, @RequestBody ProfileRequest request, HttpServletResponse response){
+        memberService.joinMember(request, memberId, response);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
@@ -33,8 +34,13 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(memberService.updateMemberProfile(request, memberId));
     }
 
-    
-    //TODO: 회원 탈퇴 로직 다시 만들어야 함
+
+    @DeleteMapping
+    @Operation(summary = "회원 탈퇴", description = "회원 정보와 연관된 모든 데이터를 삭제합니다.")
+    public ResponseEntity<Void> deleteMember(@AuthenticationPrincipal Long memberId) {
+        memberService.deleteMember(memberId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 
 
 }

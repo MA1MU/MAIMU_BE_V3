@@ -1,8 +1,11 @@
 package com.example.chosim.chosim.api.maimu.controller;
 
 import com.example.chosim.chosim.api.group.dto.GroupResponse;
+import com.example.chosim.chosim.api.maimu.dto.MaimuFavoriteResponse;
 import com.example.chosim.chosim.api.maimu.dto.MaimuResponse;
 import com.example.chosim.chosim.api.maimu.dto.PageMaimuResponse;
+import com.example.chosim.chosim.api.member.dto.ProfileRequest;
+import com.example.chosim.chosim.api.member.dto.ProfileResponse;
 import com.example.chosim.chosim.common.dto.ResponseDTO;
 import com.example.chosim.chosim.domain.group.service.GroupService;
 import com.example.chosim.chosim.domain.maimu.service.MaimuService;
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,5 +53,14 @@ public class MaimuController {
         maimuService.deleteMaimu(maimuId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
+    
+    //TODO: Maimu 즐겨찾기 추가하기
+    //getList로 다시 쏴주면 상관없나?? (좋아요 갱신된 마이무 리스트)
 
+    @PatchMapping("/{maimuId}/favorite")
+    @Operation(summary = "마이무 즐겨찾기", description = "해당 마이무의 즐겨찾기 옵션을 바꾸고 갱신된 마이무 리스트를 반환합니다.")
+    public ResponseEntity<MaimuFavoriteResponse> toggleFavorite(@PathVariable Long maimuId){
+
+        return ResponseEntity.status(HttpStatus.OK).body(maimuService.updateFavorite(maimuId));
+    }
 }

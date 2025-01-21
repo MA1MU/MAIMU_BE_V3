@@ -31,6 +31,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private static final String GUEST_URL = "/v1/api/guest";
     private static final String AUTH_URL = "/v1/api/auth";
 
+
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override

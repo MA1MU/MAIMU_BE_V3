@@ -1,6 +1,7 @@
 package com.example.chosim.chosim.common.config;
 
 
+import com.example.chosim.chosim.common.auth.CustomOauth2FailureHandler;
 import com.example.chosim.chosim.common.error.handler.CustomAccessDeniedHandler;
 import com.example.chosim.chosim.common.filter.JwtAuthorizationFilter;
 import com.example.chosim.chosim.common.filter.JwtExceptionFilter;
@@ -37,7 +38,8 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/health",
             "/oauth2/**",      // OAuth2 관련 엔드포인트 추가
-            "/login/**"      // OAuth2 로그인 엔드포인트 추가
+            "/login/**",      // OAuth2 로그인 엔드포인트 추가
+            "/v1/api/guest"
     };
 
     private static final String[] USER_URL = {
@@ -48,7 +50,8 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
+    private final CustomOauth2SuccessHandler customOAuth2SuccessHandler;
+    private final CustomOauth2FailureHandler customOAuth2FailureHandler;
     private final JwtAuthorizationFilter jwtAuthorizationFilter;
     private final MemberRepository memberRepository;
     private final CorsFilter corsFilter;
@@ -84,8 +87,8 @@ public class SecurityConfig {
                 .oauth2Login((oauth2) -> oauth2
                         .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService))
-                        .successHandler(customOauth2SuccessHandler)
-//                        .failureHandler(customFailureHandler)
+                        .successHandler(customOAuth2SuccessHandler)
+                        .failureHandler(customOAuth2FailureHandler)
                 );
 
         http
