@@ -20,7 +20,7 @@ public class GuestService {
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
 
-
+    @Transactional
     public GuestResponse enterGroup(Long groupId){
         Group group = groupRepository.findByIdWithLock(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
