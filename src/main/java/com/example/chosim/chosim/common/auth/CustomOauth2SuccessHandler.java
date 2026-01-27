@@ -38,7 +38,7 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final String REDIRECT_URL = "http://localhost:3000/LoginHandler";
+    private final String REDIRECT_URL = "https://maimu.vercel.app/LoginHandler";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -77,7 +77,7 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         }
         if (!StringUtils.hasText(redirectUrl)) {
             log.warn("Target URL is empty. Redirecting to default login page.");
-            redirectUrl = "http://localhost:3000";
+            redirectUrl = "https://maimu.vercel.app";
         }
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
