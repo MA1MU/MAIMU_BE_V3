@@ -20,9 +20,9 @@ public class CorsConfig {
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        config.setExposedHeaders(List.of("accessToken"));
-        config.addExposedHeader("Set-Cookie");
-        config.setMaxAge(3600L);
+        config.setExposedHeaders(List.of("accessToken")); //accessToken이라는 이름의 헤더 프론트엔드가 읽을 수 있음
+        config.addExposedHeader("Set-Cookie"); //브라우저가 쿠키 설정 헤더를 볼 수 있음
+        config.setMaxAge(3600L); //Cors검사 결과를 3600초동안 캐시에 저장
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

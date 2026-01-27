@@ -2,6 +2,7 @@ package com.example.chosim.chosim.api.guest.controller;
 
 import com.example.chosim.chosim.api.guest.dto.GuestRequest;
 import com.example.chosim.chosim.api.guest.dto.GuestResponse;
+import com.example.chosim.chosim.common.invitation.Invitation;
 import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.domain.guest.service.GuestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,17 +23,23 @@ public class GuestController {
 
     private final GuestService guestService;
 
-    @GetMapping("/{memberId}/{groupId}/all")
-    @Operation(summary = "게스트가 사용자 그룹에 진입하기", description = "게스트가 특정 사용자의 그룹에 존재하는 마이무의 갯수를 볼 수 있음")
-    public ResponseEntity<GuestResponse> enterGroup(@PathVariable Long memberId, @PathVariable Long groupId){
-        return ResponseEntity.status(HttpStatus.OK).body(guestService.enterGroup(groupId));
+    @GetMapping("/invitation/{token}")
+    @Operation(summary = "초대 토큰 검증", description = "토큰을 통해 그룹 정보를 가져옵니다.")
+    public ResponseEntity<GuestResponse> getInviteInfo(@PathVariable String token) {
+        return ResponseEntity.status(HttpStatus.OK).body(guestService.enterGroup(token));
     }
 
-    @PostMapping("/{memberId}/{groupId}/add")
+//    @GetMapping("/{memberId}/{groupId}/all")
+//    @Operation(summary = "게스트가 사용자 그룹에 진입하기", description = "게스트가 특정 사용자의 그룹에 존재하는 마이무의 갯수를 볼 수 있음")
+//    public ResponseEntity<GuestResponse> enterGroup(@PathVariable Long memberId, @PathVariable Long groupId){
+//        return ResponseEntity.status(HttpStatus.OK).body(guestService.enterGroup(groupId));
+//    }
+
+    @PostMapping("/{groupId}/{token}/add")
     @Operation(summary = "게스트가 마이무 작성", description= "게스트가 특정 그룹 진입 후 마이무 작성 이후 저장")
-    public ResponseEntity<Void> addMaimu(@PathVariable Long memberId, @PathVariable Long groupId,
+    public ResponseEntity<Void> addMaimu(@PathVariable String token,
                                          @Valid @RequestBody GuestRequest guestRequest){
-        guestService.addMaimu(groupId, guestRequest);
+        guestService.addMaimu(token, guestRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

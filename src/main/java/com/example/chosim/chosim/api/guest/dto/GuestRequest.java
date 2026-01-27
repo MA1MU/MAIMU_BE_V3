@@ -25,13 +25,17 @@ public class GuestRequest {
     @NotNull(message = "당도를 지정해 주세요")
     private Integer sugarContent;
 
+    @NotNull(message = "익명 여부를 체크해주세요")
+    private boolean isAnonymous;
+
     @Builder
-    public GuestRequest(String title, String message, String maimuColor, String writerName, Integer sugarContent){
+    public GuestRequest(String title, String message, String maimuColor, String writerName, Integer sugarContent, boolean isAnonymous) {
         this.title = title;
         this.message = message;
         this.maimuColor = maimuColor;
         this.writerName = writerName;
         this.sugarContent = sugarContent;
+        this.isAnonymous = isAnonymous;
     }
 
 }

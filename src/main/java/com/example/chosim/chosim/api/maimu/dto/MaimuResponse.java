@@ -4,6 +4,8 @@ import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class MaimuResponse {
 
@@ -15,6 +17,8 @@ public class MaimuResponse {
     private final Integer sugarContent;
     private final boolean isAnonymous;
     private final boolean isFavorite;
+    private final boolean isRead;
+    private final LocalDateTime createdAt;
 
     public MaimuResponse(Maimu maimu){
         this.maimuId = maimu.getId();
@@ -24,13 +28,14 @@ public class MaimuResponse {
         this.writerName = maimu.getWriterName();
         this.sugarContent = maimu.getSugarContent();
         this.isAnonymous = maimu.isAnonymous();
-
         this.isFavorite = maimu.isFavorite();
+        this.isRead = maimu.isRead();
+        this.createdAt = maimu.getCreatedAt();
     }
 
     @Builder
     public MaimuResponse(Long maimuId, String title, String message, String maimuColor,
-                         String writerName, Integer sugarContent, boolean isAnonymous, boolean isFavorite) {
+                         String writerName, Integer sugarContent, boolean isAnonymous, boolean isFavorite,  boolean isRead,  LocalDateTime createdAt) {
         this.maimuId = maimuId;
         this.title = title;
         this.message = message;
@@ -39,5 +44,7 @@ public class MaimuResponse {
         this.sugarContent = sugarContent;
         this.isAnonymous = isAnonymous;
         this.isFavorite = isFavorite;
+        this.isRead = isRead;
+        this.createdAt = createdAt;
     }
 }

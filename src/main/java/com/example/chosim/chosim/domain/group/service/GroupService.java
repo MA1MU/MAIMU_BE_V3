@@ -1,5 +1,7 @@
 package com.example.chosim.chosim.domain.group.service;
 
+import com.example.chosim.chosim.common.invitation.Invitation;
+import com.example.chosim.chosim.common.invitation.InvitationRepository;
 import com.example.chosim.chosim.domain.auth.entity.Member;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.domain.group.entity.Group;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,6 +31,7 @@ public class GroupService {
     private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
+    private final InvitationRepository invitationRepository;
 
     @Transactional
     public GroupResponse createGroup(Long memberId, GroupRequest groupRequest){
@@ -85,5 +89,18 @@ public class GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
         groupRepository.delete(group);
     }
+
+    public String createInvitation(Long groupId, Long senderId) {
+        String token = UUID.randomUUID().toString();
+        Invitation invitation = Invitation.builder()
+                .token(token)
+                .groupId(groupId)
+                .senderId(senderId)
+                .build();
+
+        invitationRepository.save(invitation);
+        return token;
+    }
+
 }
 

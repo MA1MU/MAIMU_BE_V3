@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -37,8 +38,7 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final String REGISTER_URL= "http://localhost:3000/ProfileEdit";
-    private final String MAINPAGE_URL = "http://localhost:3000/MainPage";
+    private final String REDIRECT_URL = "http://localhost:3000/LoginHandler";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -51,18 +51,13 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         MemberRole checkRole = MemberRole.fromKey(grantedAuthority);
         Token token = jwtTokenProvider.createToken(principal.getMember().getId(), grantedAuthority);
 
-        String redirectUrl = getRedirectUrlByRole(checkRole);
-
+        String redirectUrl = "";
         //MemberRole에 따른 분기 처리
         if (checkRole == MemberRole.PREMEMBER) {
-            String tempToken = token.getAccessToken();
-            response.addHeader("tempToken", tempToken);
             log.info("회원가입 페이지로 redirect, JWT 임시 토큰 생성");
+            redirectUrl = buildRedirectUrl(REDIRECT_URL, "tempToken", token.getAccessToken());
         }
-        else {
-            String accessToken = token.getAccessToken();
-            response.addHeader("accessToken", accessToken);
-
+        else if (checkRole == MemberRole.MEMBER) {
             RefreshToken refreshToken = new RefreshToken(principal.getMember().getId(), token.getRefreshToken());
             refreshToken.updateRefreshToken(token.getRefreshToken());
             refreshTokenRepository.save(refreshToken);
@@ -76,20 +71,22 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
 
+            redirectUrl = buildRedirectUrl(REDIRECT_URL, "accessToken", token.getAccessToken());
+
             log.info("기존 회원 로그인 성공, accessToken 및 refreshToken 생성");
+        }
+        if (!StringUtils.hasText(redirectUrl)) {
+            log.warn("Target URL is empty. Redirecting to default login page.");
+            redirectUrl = "http://localhost:3000";
         }
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 
-    private String getRedirectUrlByRole(MemberRole role){
-
-        if (role == MemberRole.PREMEMBER) {
-            return UriComponentsBuilder.fromUriString(REGISTER_URL)
-                    .build()
-                    .toUriString();
-        }
-        return UriComponentsBuilder.fromUriString(MAINPAGE_URL)
+    private String buildRedirectUrl(String url, String paramName, String token) {
+        return UriComponentsBuilder.fromUriString(url)
+                .queryParam(paramName, token)
                 .build()
+                .encode(StandardCharsets.UTF_8)
                 .toUriString();
     }
 }

@@ -23,10 +23,10 @@ public class JwtTokenProvider {
     String secretKey;
 
     @Value("${jwt.access.expiration}")
-    Long accessExpiration;
+    Long accessExpiration; //30분
 
-    @Value("${jwt.refresh.expiration}")
-    Long refreshExpiration;
+    @Value("${jwt.refresh.expiration}")  //
+    Long refreshExpiration; //3일
 
     private final BlackListRepository blackListRepository;
     private final MemberRepository memberRepository;
@@ -66,7 +66,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))//30분
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
@@ -79,7 +79,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration)) //3일
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }

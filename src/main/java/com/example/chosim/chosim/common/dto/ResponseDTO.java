@@ -6,5 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ResponseDTO<T>{
+    String maimuProfile;
     private T data;
 }

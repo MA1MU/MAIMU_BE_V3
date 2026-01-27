@@ -78,6 +78,11 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+    public String findMemberMaimuProfile(Long memberId){
+        Member member = memberReader.findById(memberId);
+        return member.getMaimuProfile();
+    }
+
     //마이페이지 정보 가져오기
     public ProfileResponse findMemberProfile(Long memberId){
         Member member = memberReader.findById(memberId);

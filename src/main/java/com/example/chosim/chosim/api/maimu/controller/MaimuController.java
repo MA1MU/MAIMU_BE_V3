@@ -53,9 +53,6 @@ public class MaimuController {
         maimuService.deleteMaimu(maimuId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
-    
-    //TODO: Maimu 즐겨찾기 추가하기
-    //getList로 다시 쏴주면 상관없나?? (좋아요 갱신된 마이무 리스트)
 
     @PatchMapping("/{maimuId}/favorite")
     @Operation(summary = "마이무 즐겨찾기", description = "해당 마이무의 즐겨찾기 옵션을 바꾸고 갱신된 마이무 리스트를 반환합니다.")
