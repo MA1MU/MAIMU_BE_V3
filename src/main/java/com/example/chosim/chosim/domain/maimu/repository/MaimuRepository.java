@@ -1,6 +1,7 @@
 package com.example.chosim.chosim.domain.maimu.repository;
 
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +21,7 @@ public interface MaimuRepository extends JpaRepository<Maimu, Long>, MaimuReposi
     @Query("SELECT m FROM Maimu m JOIN FETCH m.group g JOIN FETCH g.member WHERE m.isRead = false AND m.isNotified = false")
     List<Maimu> findAllIsNotifiedMaimusWithMember();
 
+    @Transactional
     @Modifying(clearAutomatically = true) // 쿼리 실행 후 영속성 컨텍스트를 비워 데이터 정합성 유지
     @Query("UPDATE Maimu m SET m.isNotified = true WHERE m.id IN :ids")
     void updateNotifiedStatus(@Param("ids") List<Long> ids);
