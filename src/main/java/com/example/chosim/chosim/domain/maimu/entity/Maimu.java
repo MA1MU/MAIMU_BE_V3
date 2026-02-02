@@ -79,6 +79,7 @@ public class Maimu extends BaseTimeEntity {
 
     public void markAsRead() {
         this.isRead = true;
+        this.isNotified = true;
     }
 
 
