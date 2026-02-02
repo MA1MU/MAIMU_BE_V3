@@ -15,7 +15,13 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: 6379
-
+  mail:
+    host: smtp.gmail.com
+    username: ${MAIL_ADDRESS:maimu.official.cotato}
+    password: ${APP_PASSWORD:izveogiavpfldykh}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   security:
     oauth2:
       client:
