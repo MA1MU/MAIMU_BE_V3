@@ -46,6 +46,9 @@ public class Maimu extends BaseTimeEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    @Column(name = "is_notified", nullable = false)
+    private boolean isNotified = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
@@ -62,6 +65,7 @@ public class Maimu extends BaseTimeEntity {
         this.group = group;
         this.sugarContent = sugarContent;
         this.isFavorite = false;
+        this.isNotified = false;
         this.isRead = false;
     }
 
