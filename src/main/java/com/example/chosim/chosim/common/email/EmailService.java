@@ -5,7 +5,6 @@ import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.domain.maimu.repository.MaimuRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,6 +13,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class EmailService {
         javaMailSender.send(mimeMessage);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected void updateMaimuStatus(List<Maimu> maimus) {
         List<Long> ids = maimus.stream().map(Maimu::getId).collect(Collectors.toList());
         maimuRepository.updateNotifiedStatus(ids);
