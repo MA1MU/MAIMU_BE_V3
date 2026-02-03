@@ -61,7 +61,7 @@ public class EmailService {
     }
 
     private boolean sendEmailWithRetry(Member member, List<Maimu> maimus) {
-        String title = "[MAIMU] " + member.getMaimuProfile() + "님, 사물함에 새로운 소식이 도착했습니다!";
+        String title = "[MAIMU] " + member.getNickName() + "님, 사물함에 새로운 소식이 도착했습니다!";
         String htmlContent = buildHtmlContent(member, maimus);
 
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -128,7 +128,7 @@ public class EmailService {
                 </div>
             </body>
             </html>
-            """, member.getMaimuProfile(), groupRows.toString());
+            """, member.getNickName(), groupRows.toString());
     }
 
 }
