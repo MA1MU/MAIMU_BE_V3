@@ -1,6 +1,7 @@
 package com.example.chosim.chosim.api.maimu.dto;
 
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,6 +19,7 @@ public class MaimuResponse {
     private final boolean isAnonymous;
     private final boolean isFavorite;
     private final boolean isRead;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 
     public MaimuResponse(Maimu maimu){
