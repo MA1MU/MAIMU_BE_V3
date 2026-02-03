@@ -87,7 +87,7 @@ public class MemberService {
     public ProfileResponse findMemberProfile(Long memberId){
         Member member = memberReader.findById(memberId);
         ProfileResponse profileResponse = ProfileResponse.builder()
-                .maimuProfile(member.getMaimuProfile())
+                .maimuProfile(member.getNickName())
                 .birth(member.getBirth())
                 .nickName(member.getNickName())
                 .build();
