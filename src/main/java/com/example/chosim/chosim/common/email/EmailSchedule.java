@@ -17,7 +17,7 @@ public class EmailSchedule {
         log.info("MAIMU 요약 알림 스케줄러 실행 (오전 10시 ~ 오후 10시 정각)");
         try {
             emailService.sendSummaryEmails();
-            log.info("MAIMU 요약 알림 발송 프로세스 완료");
+            log.info("MAIMU 요약 알림 발송 프로세스 완료!");
         } catch (Exception e) {
             log.error("스케줄러 실행 중 오류 발생: {}", e.getMessage());
         }
