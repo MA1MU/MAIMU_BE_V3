@@ -42,5 +42,11 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @GetMapping("/profile")
+    @Operation(summary = "프로필 값 가져오기", description = "기존의 프로필 값들을 들고옵니다.")
+    public ResponseEntity<ProfileResponse> updateProfile(@AuthenticationPrincipal Long memberId){
+        return ResponseEntity.status(HttpStatus.OK).body(memberService.findMemberProfile(memberId));
+    }
+
 
 }
