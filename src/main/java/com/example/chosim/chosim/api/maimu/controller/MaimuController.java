@@ -33,9 +33,8 @@ public class MaimuController {
     //마이무 여러개 보기
     @GetMapping("/{groupId}/all")
     @Operation(summary = "모든 마이무정보 페이지 처리로 보기", description = "내 그룹과 관련된 마이무 갯수를 페이지 처리로 한 번에 18개만 가져올 수 있게 합니다.")
-    public ResponseEntity<PageMaimuResponse> getList(@PathVariable Long groupId, @RequestParam(defaultValue = "0") int page){
-        Page<MaimuResponse> maimuPage = maimuService.getList(groupId, page);
-        PageMaimuResponse response = new PageMaimuResponse(maimuPage);
+    public ResponseEntity<PageMaimuResponse<MaimuResponse>> getList(@PathVariable Long groupId, @RequestParam(defaultValue = "0") int page){
+        PageMaimuResponse<MaimuResponse> response = maimuService.getList(groupId, page);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     
