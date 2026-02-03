@@ -1,6 +1,8 @@
 package com.example.chosim.chosim.domain.maimu.service;
 
 import com.example.chosim.chosim.api.maimu.dto.MaimuFavoriteResponse;
+import com.example.chosim.chosim.api.maimu.dto.PageMaimuResponse;
+import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.api.maimu.dto.MaimuResponse;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
@@ -21,11 +23,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class MaimuService {
 
     private final MaimuRepository maimuRepository;
+    private final GroupRepository groupRepository;
 
-    public Page<MaimuResponse> getList(Long groupId, int page){
+    public PageMaimuResponse<MaimuResponse> getList(Long groupId, int page){
+        Group group = groupRepository.findByIdWithMember(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 그룹이 존재하지 않습니다."));
+        String nickName = group.getMember().getNickName();
+
         Pageable pageable = PageRequest.of(page, 18);
         Page<Maimu> maimuPage = maimuRepository.findMaimusByGroupId(groupId, pageable);
-        return maimuPage.map(MaimuResponse::new);
+
+        Page<MaimuResponse> maimuResponses = maimuPage.map(MaimuResponse::new);
+        return new PageMaimuResponse<>(nickName, maimuResponses);
     }
 
     @Transactional
