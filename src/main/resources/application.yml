@@ -18,7 +18,7 @@ spring:
   mail:
     host: smtp.gmail.com
     username: ${MAIL_ADDRESS:maimu.official.cotato}
-    password: ${APP_PASSWORD:izveogiavpfldykh}
+    password: ${APP_PASSWORD}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
