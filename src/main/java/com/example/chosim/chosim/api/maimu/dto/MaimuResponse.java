@@ -19,7 +19,7 @@ public class MaimuResponse {
     private final boolean isAnonymous;
     private final boolean isFavorite;
     private final boolean isRead;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private final LocalDateTime createdAt;
 
     public MaimuResponse(Maimu maimu){

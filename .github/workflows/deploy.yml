@@ -80,10 +80,15 @@ jobs:
           script_stop: true
           script: |
             if ! docker ps -a | grep -q redis; then
-              docker run -d --name redis --network maimu-network redis:latest
+              docker run -d --name redis --network maimu-network -e TZ=Asia/Seoul -v /etc/localtime:/etc/localtime:ro redis:latest
             fi
             docker stop maimu-ecr || true
             docker rm maimu-ecr || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest
-            docker run -d --name maimu-ecr --network maimu-network -p 8080:8080 -e REDIS_HOST=redis ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest
-#            docker run -d --name maimu-ecr -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/maimu-ecr:latest
+            docker run -d --name maimu-ecr \
+                          --network maimu-network \
+                          -p 8080:8080 \
+                          -e REDIS_HOST=redis \
+                          -e TZ=Asia/Seoul \
+                          -v /etc/localtime:/etc/localtime:ro \
+                          ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest
