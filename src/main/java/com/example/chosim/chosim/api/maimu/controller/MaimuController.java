@@ -43,7 +43,6 @@ public class MaimuController {
     @Operation(summary = "마이무 1개 정보 보기", description = "마이무 1개의 상세 정보를 조회하며, 조회 시 읽음 상태로 변경됩니다.")
     public ResponseEntity<MaimuResponse> getSingleMaimuInfo(@PathVariable Long maimuId){
         MaimuResponse maimuReponse= maimuService.getMaimu(maimuId);
-        log.info("마이무 시간 측정 컨트롤러 부분 : ", maimuReponse.getCreatedAt());
         return ResponseEntity.status(HttpStatus.OK).body(maimuReponse);
     }
 

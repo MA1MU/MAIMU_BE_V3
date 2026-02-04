@@ -12,7 +12,7 @@ public class EmailSchedule {
 
     private final EmailService emailService;
 
-    @Scheduled(cron = "0 * 23,0,1 * * *")
+    @Scheduled(cron = "0 0 9-22 * * *")
     public void scheduleMaimuNotification() {
         log.info("MAIMU 요약 알림 스케줄러 실행 (오전 10시 ~ 오후 10시 정각)");
         try {

@@ -42,7 +42,6 @@ public class MaimuService {
         Maimu maimu = maimuRepository.findById(maimuId)
                 .orElseThrow(() -> new EntityNotFoundException("Maimu엔티티를 찾을 수 없습니다."));
         maimu.markAsRead();
-        log.info("maimu 시간 측정 : ", maimu.getCreatedAt());
         return new MaimuResponse(maimu);
     }
 
