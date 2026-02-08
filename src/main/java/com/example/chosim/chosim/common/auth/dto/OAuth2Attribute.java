@@ -50,7 +50,7 @@ public class OAuth2Attribute {
     private static OAuth2Attribute ofNaver(Map<String, Object> attributes) {
         Map<String, Object> attributesMap = (Map<String, Object>)attributes.get("response");
         return OAuth2Attribute.builder()
-                .username(attributesMap.get("name").toString())
+                .username("naver")
                 .email(attributesMap.get("email").toString())
                 .providerId(attributesMap.get("id").toString())
                 .attributes(attributesMap)
