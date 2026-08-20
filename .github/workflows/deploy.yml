@@ -80,15 +80,43 @@ jobs:
           script_stop: true
           script: |
             if ! docker ps -a | grep -q redis; then
-              docker run -d --name redis --network maimu-network -e TZ=Asia/Seoul -v /etc/localtime:/etc/localtime:ro redis:latest
+              docker run -d --name redis --network maimu-network --restart unless-stopped -e TZ=Asia/Seoul -v /etc/localtime:/etc/localtime:ro redis:latest
             fi
+
+            # 로컬 MySQL 자격증명 (서버에만 보관, 저장소/Secrets에 없음)
+            DB_PW=$(sudo sed -n 's/^MYSQL_PWD=//p' /root/.maimu-local-db.env)
+
+            # MySQL 컨테이너가 없으면 기동 (데이터는 maimu-mysql-data 볼륨에 영속)
+            if ! docker ps -a --format '{{.Names}}' | grep -qx mysql; then
+              docker run -d --name mysql \
+                            --network maimu-network \
+                            --restart unless-stopped \
+                            -v maimu-mysql-data:/var/lib/mysql \
+                            -e MYSQL_ROOT_PASSWORD="$DB_PW" \
+                            -e MYSQL_DATABASE=maimu \
+                            -e MYSQL_USER=admin \
+                            -e MYSQL_PASSWORD="$DB_PW" \
+                            -e TZ=Asia/Seoul \
+                            mysql:8.0 \
+                            --default-time-zone=+09:00 \
+                            --character-set-server=utf8mb4 \
+                            --collation-server=utf8mb4_unicode_ci \
+                            --innodb-buffer-pool-size=128M \
+                            --performance-schema=OFF \
+                            --max-connections=50
+            fi
+
             docker stop maimu-ecr || true
             docker rm maimu-ecr || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest
             docker run -d --name maimu-ecr \
                           --network maimu-network \
+                          --restart unless-stopped \
                           -p 8080:8080 \
                           -e REDIS_HOST=redis \
                           -e TZ=Asia/Seoul \
+                          -e SPRING_DATASOURCE_URL='jdbc:mysql://mysql:3306/maimu?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true' \
+                          -e SPRING_DATASOURCE_USERNAME=admin \
+                          -e SPRING_DATASOURCE_PASSWORD="$DB_PW" \
                           -v /etc/localtime:/etc/localtime:ro \
                           ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest
