@@ -124,13 +124,40 @@ this.maimuCount = group.getMaimus().size();           // 쪽지 전체를 메모
 
 ### 3-2. 요청 경로 — `GuestService.addMaimu` + `push`
 
+**수정 전** — 요청 스레드가 직접 사물함에 배타 락을 걸고 DB에 INSERT했다:
 ```java
-// GuestService.java — DB 트랜잭션 없이 Redis 버퍼에만 넣고 응답한다.
+// GuestService.java (before)
+@Transactional
+public void addMaimu(String token, GuestRequest guestRequest){
+    Invitation invitation = verifyInvitation(token);
+    Group group = groupRepository.findByIdWithLock(invitation.getGroupId())   // ← FOR UPDATE 배타 락
+            .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
+
+    group.addMaimu(Maimu.builder()           // ← 더티 체킹 + CascadeType.ALL 로 커밋 시 INSERT
+            .title(guestRequest.getTitle())
+            .message(guestRequest.getMessage())
+            .maimuColor(MaimuColor.fromString(guestRequest.getMaimuColor()))
+            .isAnonymous(guestRequest.isAnonymous())
+            .writerName(guestRequest.getWriterName())
+            .group(group)
+            .sugarContent(guestRequest.getSugarContent())
+            .build());
+}
+```
+
+**수정 후** — 락도 DB 트랜잭션도 없이 Redis 버퍼에만 넣고 즉시 응답한다:
+```java
+// GuestService.java (after) — DB 트랜잭션 없이 Redis 버퍼에만 넣고 응답한다.
 public void addMaimu(String token, GuestRequest guestRequest){
     Invitation invitation = verifyInvitation(token);       // Redis에서 토큰 → groupId
     maimuWriteBackBuffer.push(invitation.getGroupId(), guestRequest);
 }
 ```
+
+> 바뀐 핵심: ① `@Transactional` 제거(요청 경로에서 DB 커밋을 없앰) ② `findByIdWithLock`(배타 락) 제거
+> ③ INSERT를 `MaimuWriteBackBuffer.push`(Redis RPUSH)로 대체. 실제 DB 반영은 아래 `push`/`flush`가 맡는다.
+
+`push`의 전체 구현:
 
 ```java
 // MaimuWriteBackBuffer.java
@@ -278,10 +305,23 @@ public void evict(Long groupId) { redisTemplate.delete(key(groupId)); }  // 무�
 ```
 
 `loader`가 `Supplier`(값을 만드는 함수)인 이유: 캐시 클래스가 "DB를 어떻게 읽는지"를 몰라도 되게 하려고.
-호출부가 "미스일 때 뭘 할지"를 람다로 넘긴다. 아래 `GuestService`가 그 람다를 준다:
+호출부가 "미스일 때 뭘 할지"를 람다로 넘긴다.
 
+**수정 전** — 읽기인데 배타 락을 걸고, 개수를 세려고 쪽지 전체를 메모리로 로딩했다:
 ```java
-// GuestService.java
+// GuestService.java (before)
+@Transactional
+public GuestResponse enterGroup(String token){
+    Invitation invitation = verifyInvitation(token);
+    Group group = groupRepository.findByIdWithLock(invitation.getGroupId())   // ← 읽기인데 FOR UPDATE
+            .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
+    return new GuestResponse(group);     // ← 생성자 안에서 group.getMaimus().size() → 쪽지 전체 N행 로딩
+}
+```
+
+**수정 후** — Redis 캐시를 먼저 보고, 미스일 때만 락 없이 `COUNT` 한 번으로 읽는다:
+```java
+// GuestService.java (after)
 public GuestResponse enterGroup(String token){
     Invitation invitation = verifyInvitation(token);
     return guestGroupCache.get(invitation.getGroupId(),
@@ -289,7 +329,7 @@ public GuestResponse enterGroup(String token){
 }
 
 private GuestResponse loadGroupSummary(Long groupId){
-    Group group = groupRepository.findById(groupId)            // 락 없음 (개선 전엔 FOR UPDATE였음)
+    Group group = groupRepository.findById(groupId)            // 락 없음 (수정 전엔 FOR UPDATE였음)
             .orElseThrow(...);
     return GuestResponse.builder()
             .id(group.getId()).groupName(group.getGroupName()).groupColor(group.getGroupColor())
@@ -297,6 +337,9 @@ private GuestResponse loadGroupSummary(Long groupId){
             .build();
 }
 ```
+
+> 바뀐 핵심: ① 캐시 우선 조회 추가 ② `findByIdWithLock` → `findById`(락 제거) ③ 쪽지 전체 로딩 → `COUNT` 쿼리
+> ④ 클래스 레벨 `@Transactional(readOnly=true)` 제거(4-4절 참고).
 
 ### 4-3. 무효화(언제 캐시를 지우나)
 캐시의 영원한 숙제는 "값이 바뀌었는데 캐시가 옛날 값을 들고 있는 것"이다. 세 지점에서 `evict`를 부른다:
