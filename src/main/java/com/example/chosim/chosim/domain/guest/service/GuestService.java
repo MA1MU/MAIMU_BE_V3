@@ -6,47 +6,45 @@ import com.example.chosim.chosim.common.invitation.Invitation;
 import com.example.chosim.chosim.common.invitation.InvitationRepository;
 import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
-import com.example.chosim.chosim.domain.maimu.entity.Maimu;
-import com.example.chosim.chosim.domain.maimu.enums.MaimuColor;
 import com.example.chosim.chosim.domain.maimu.repository.MaimuRepository;
+import com.example.chosim.chosim.domain.maimu.service.MaimuWriteBackBuffer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly=true)
+// 클래스 트랜잭션을 두지 않는다: 캐시 히트·버퍼 적재 경로에서 DB 커넥션을 잡지 않기 위해서다.
 public class GuestService {
 
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
     private final InvitationRepository invitationRepository;
+    private final GuestGroupCache guestGroupCache;
+    private final MaimuWriteBackBuffer maimuWriteBackBuffer;
 
-    @Transactional
+    // 링크를 연 게스트 수백 명이 같은 사물함을 본다 → Redis cache-aside. 미스일 때만 DB(잠금 없이 COUNT 한 번).
     public GuestResponse enterGroup(String token){
         Invitation invitation = verifyInvitation(token);
-        Group group = groupRepository.findByIdWithLock(invitation.getGroupId())
-                .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
-
-        return new GuestResponse(group);
+        return guestGroupCache.get(invitation.getGroupId(), () -> loadGroupSummary(invitation.getGroupId()));
     }
 
-    @Transactional
-    public void addMaimu(String token, GuestRequest guestRequest){
-        Invitation invitation = verifyInvitation(token);
-        Group group = groupRepository.findByIdWithLock(invitation.getGroupId())
+    private GuestResponse loadGroupSummary(Long groupId){
+        Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
 
-        group.addMaimu(Maimu.builder()
-                .title(guestRequest.getTitle())
-                .message(guestRequest.getMessage())
-                .maimuColor(MaimuColor.fromString(guestRequest.getMaimuColor()))
-                .isAnonymous(guestRequest.isAnonymous())
-                .writerName(guestRequest.getWriterName())
-                .group(group)
-                .sugarContent(guestRequest.getSugarContent())
-                .build());
+        return GuestResponse.builder()
+                .id(group.getId())
+                .groupName(group.getGroupName())
+                .groupColor(group.getGroupColor())
+                .maimuCount(maimuRepository.countByGroupId(group.getId()).intValue())
+                .build();
+    }
+
+    // Write-back: DB 트랜잭션 없이 Redis 버퍼에만 넣고 응답한다. DB 반영은 MaimuWriteBackBuffer 가 묶어서 한다.
+    public void addMaimu(String token, GuestRequest guestRequest){
+        Invitation invitation = verifyInvitation(token);
+        maimuWriteBackBuffer.push(invitation.getGroupId(), guestRequest);
     }
 
     public Invitation verifyInvitation(String token) {

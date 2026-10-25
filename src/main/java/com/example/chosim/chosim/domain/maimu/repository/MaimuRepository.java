@@ -14,6 +14,9 @@ public interface MaimuRepository extends JpaRepository<Maimu, Long>, MaimuReposi
     @Query("SELECT COUNT(m) FROM Maimu m WHERE m.group.id = :groupId AND m.isRead = false")
     Long countByGroupIdAndIsReadFalse(@Param("groupId") Long groupId);
 
+    @Query("SELECT COUNT(m) FROM Maimu m WHERE m.group.id = :groupId")
+    Long countByGroupId(@Param("groupId") Long groupId);
+
     @Modifying
     @Query("DELETE FROM Maimu m WHERE m.group.id = :groupId")
     void deleteByGroupId(@Param("groupId") Long groupId);

@@ -1,0 +1,5 @@
+# 로컬에서 발급한 초대 토큰. 커밋하지 않는다
+tokens.json
+tokens-*.json
+results/warmup.json
+results/smoke.json

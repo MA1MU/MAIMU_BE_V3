@@ -2,6 +2,7 @@ package com.example.chosim.chosim.api.guest.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,15 +12,18 @@ import lombok.Setter;
 public class GuestRequest {
 
     @NotBlank(message = "제목을 작성해 주세요")
+    @Size(max = 100, message = "제목은 100자 이하로 작성해 주세요")
     private String title;
 
     @NotBlank(message = "내용을 작성해 주세요")
+    @Size(max = 2000, message = "내용은 2000자 이하로 작성해 주세요")
     private String message;
 
     @NotBlank(message = "색깔을 지정해 주세요")
     private String maimuColor;
 
     @NotBlank(message = "작성자 이름을 지정해 주세요")
+    @Size(max = 50, message = "작성자 이름은 50자 이하로 지정해 주세요")
     private String writerName;
 
     @NotNull(message = "당도를 지정해 주세요")

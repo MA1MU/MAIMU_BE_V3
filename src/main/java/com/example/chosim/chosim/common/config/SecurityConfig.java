@@ -9,6 +9,7 @@ import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
 import com.example.chosim.chosim.domain.auth.repository.MemberRepository;
 import com.example.chosim.chosim.common.auth.CustomOauth2SuccessHandler;
 import com.example.chosim.chosim.common.auth.CustomOAuth2UserService;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +46,8 @@ public class SecurityConfig {
     private static final String[] USER_URL = {
             "/v1/api/member/edit",
             "/v1/api/group/**",
-            "/v1/api/maimu/**"
+            "/v1/api/maimu/**",
+            "/v1/api/notification/**"
     };
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -68,6 +70,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers("/v1/api/member/join").hasRole("PREMEMBER")
                         .requestMatchers(HttpMethod.GET, USER_URL).hasRole("MEMBER")

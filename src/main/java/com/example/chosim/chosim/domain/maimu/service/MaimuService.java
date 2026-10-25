@@ -6,6 +6,7 @@ import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.domain.maimu.entity.Maimu;
 import com.example.chosim.chosim.api.maimu.dto.MaimuResponse;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
+import com.example.chosim.chosim.domain.guest.service.GuestGroupCache;
 import com.example.chosim.chosim.domain.maimu.repository.MaimuRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class MaimuService {
 
     private final MaimuRepository maimuRepository;
     private final GroupRepository groupRepository;
+    private final GuestGroupCache guestGroupCache;
 
     public PageMaimuResponse<MaimuResponse> getList(Long groupId, int page){
         Group group = groupRepository.findByIdWithMember(groupId)
@@ -50,6 +52,7 @@ public class MaimuService {
         Maimu maimu = maimuRepository.findById(maimuId)
                 .orElseThrow(() -> new EntityNotFoundException("Maimu엔티티를 찾을 수 없음"));
         maimuRepository.delete(maimu);
+        guestGroupCache.evict(maimu.getGroup().getId());
     }
 
     @Transactional

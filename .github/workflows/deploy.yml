@@ -81,8 +81,13 @@ jobs:
           script_stop: true
           script: |
             if ! docker ps -a | grep -q redis; then
-              docker run -d --name redis --network maimu-network --restart unless-stopped -e TZ=Asia/Seoul -v /etc/localtime:/etc/localtime:ro redis:latest
+              docker run -d --name redis --network maimu-network --restart unless-stopped -e TZ=Asia/Seoul -v /etc/localtime:/etc/localtime:ro redis:latest --appendonly yes --appendfsync everysec
             fi
+
+            # 기존 컨테이너에도 Write-back 버퍼의 AOF 영속화를 적용한다.
+            docker start redis >/dev/null
+            docker exec redis redis-cli CONFIG SET appendfsync everysec
+            docker exec redis redis-cli CONFIG SET appendonly yes
 
             # 로컬 MySQL 자격증명 (서버에만 보관, 저장소/Secrets에 없음)
             DB_PW=$(sudo sed -n 's/^MYSQL_PWD=//p' /root/.maimu-local-db.env)
@@ -116,7 +121,7 @@ jobs:
                           -p 8080:8080 \
                           -e REDIS_HOST=redis \
                           -e TZ=Asia/Seoul \
-                          -e SPRING_DATASOURCE_URL='jdbc:mysql://mysql:3306/maimu?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true' \
+                          -e SPRING_DATASOURCE_URL='jdbc:mysql://mysql:3306/maimu?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true&rewriteBatchedStatements=true' \
                           -e SPRING_DATASOURCE_USERNAME=admin \
                           -e SPRING_DATASOURCE_PASSWORD="$DB_PW" \
                           -v /etc/localtime:/etc/localtime:ro \

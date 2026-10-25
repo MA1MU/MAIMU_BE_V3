@@ -8,6 +8,7 @@ import com.example.chosim.chosim.domain.group.entity.Group;
 import com.example.chosim.chosim.api.group.dto.GroupRequest;
 import com.example.chosim.chosim.api.group.dto.GroupResponse;
 import com.example.chosim.chosim.domain.group.repository.GroupRepository;
+import com.example.chosim.chosim.domain.guest.service.GuestGroupCache;
 import com.example.chosim.chosim.domain.maimu.repository.MaimuRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -32,6 +33,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final MaimuRepository maimuRepository;
     private final InvitationRepository invitationRepository;
+    private final GuestGroupCache guestGroupCache;
 
     @Transactional
     public GroupResponse createGroup(Long memberId, GroupRequest groupRequest){
@@ -73,6 +75,7 @@ public class GroupService {
                 .groupColor(groupRequest.getGroupColor())
                 .build();
         group.edit(groupEditor);
+        guestGroupCache.evict(id);
 
         Long unreadCount = maimuRepository.countByGroupIdAndIsReadFalse(id);
         return new GroupResponse(
@@ -88,6 +91,7 @@ public class GroupService {
         Group group = groupRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
         groupRepository.delete(group);
+        guestGroupCache.evict(id);
     }
 
     public String createInvitation(Long groupId, Long senderId) {
