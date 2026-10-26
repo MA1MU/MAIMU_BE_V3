@@ -18,6 +18,8 @@ public class CorsConfig {
 
         config.setAllowCredentials(true);
         config.addAllowedOrigin("https://maimu.vercel.app");
+        // 관리자 페이지(/admin.html)는 API 서버 자신이 서빙한다. 브라우저는 같은 출처여도 POST 에 Origin 을 붙이므로 허용해야 재발급이 된다
+        config.addAllowedOrigin("https://apimaimu.co.kr");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setExposedHeaders(List.of("accessToken")); //accessToken이라는 이름의 헤더 프론트엔드가 읽을 수 있음
