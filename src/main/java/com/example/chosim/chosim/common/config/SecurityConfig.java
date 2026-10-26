@@ -40,7 +40,8 @@ public class SecurityConfig {
             "/health",
             "/oauth2/**",      // OAuth2 관련 엔드포인트 추가
             "/login/**",      // OAuth2 로그인 엔드포인트 추가
-            "/v1/api/guest"
+            "/v1/api/guest",
+            "/admin.html"     // 관리자 페이지 껍데기(정적 HTML). 데이터 API 는 아래에서 ADMIN 으로 막는다
     };
 
     private static final String[] USER_URL = {
@@ -70,13 +71,17 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                        // ERROR: 403/500 을 sendError 로 보내면 /error 로 다시 디스패치되는데, 이 내부 요청엔 인증 정보가 없다.
+                        // 막혀 있으면 원래 403 대신 로그인 페이지(302)로 튕긴다. 원 요청은 이미 인가 검사를 거쳤으므로 열어 둔다.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers(WHITE_LIST).permitAll()
                         .requestMatchers("/v1/api/member/join").hasRole("PREMEMBER")
-                        .requestMatchers(HttpMethod.GET, USER_URL).hasRole("MEMBER")
-                        .requestMatchers(HttpMethod.POST,USER_URL).hasRole("MEMBER")
-                        .requestMatchers(HttpMethod.PATCH, USER_URL).hasRole("MEMBER")
-                        .requestMatchers(HttpMethod.DELETE, USER_URL).hasRole("MEMBER")
+                        .requestMatchers("/v1/api/admin/**").hasRole("ADMIN")
+                        // 관리자도 일반 회원 기능은 그대로 쓸 수 있어야 한다
+                        .requestMatchers(HttpMethod.GET, USER_URL).hasAnyRole("MEMBER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST,USER_URL).hasAnyRole("MEMBER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, USER_URL).hasAnyRole("MEMBER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, USER_URL).hasAnyRole("MEMBER", "ADMIN")
                         .anyRequest().authenticated());
 
         http

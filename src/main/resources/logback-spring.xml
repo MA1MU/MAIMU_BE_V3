@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  로그 설정.
+  - 모든 줄에 %X{traceId}(요청 ID), %X{memberId}(회원 ID)가 찍힌다. 값은 MdcFilter / LoggingAspect 가 MDC 에 넣는다.
+  - 콘솔·파일 출력은 AsyncAppender 로 감싸서 별도 스레드가 쓴다.
+    요청 스레드는 큐에 넣기만 하고 바로 돌아가므로 디스크 I/O 가 응답 시간을 잡아먹지 않는다.
+-->
+<configuration>
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
+    <property name="PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] [%X{memberId:-}] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 관리자 페이지가 읽는 파일. 10MB 마다 잘라 7일, 최대 100MB 까지만 보관한다 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/maimu.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/maimu.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!--
+      queueSize: 이벤트를 쌓아 두는 큐 크기.
+      discardingThreshold(기본: 큐의 20%): 남은 칸이 20% 아래로 떨어지면 TRACE/DEBUG/INFO 는 버리고 WARN/ERROR 만 받는다.
+      → 로그 폭주 때 요청 스레드가 막히는 대신 덜 중요한 로그를 포기한다.
+      MDC 값은 이벤트를 큐에 넣는 순간 복사되므로 다른 스레드가 써도 traceId 가 유지된다.
+    -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </root>
+</configuration>

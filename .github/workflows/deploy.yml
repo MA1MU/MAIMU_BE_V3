@@ -124,5 +124,8 @@ jobs:
                           -e SPRING_DATASOURCE_URL='jdbc:mysql://mysql:3306/maimu?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true&rewriteBatchedStatements=true' \
                           -e SPRING_DATASOURCE_USERNAME=admin \
                           -e SPRING_DATASOURCE_PASSWORD="$DB_PW" \
+                          -e LOG_PATH=/logs \
+                          -e ADMIN_EMAIL='${{ secrets.ADMIN_EMAIL }}' \
+                          -v maimu-logs:/logs \
                           -v /etc/localtime:/etc/localtime:ro \
                           ${{ steps.login-ecr.outputs.registry }}/maimu-server:latest

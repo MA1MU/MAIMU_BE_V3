@@ -65,6 +65,15 @@ spring:
             scope:
               - name
               - email
+# Actuator 는 지표 수집(Micrometer)용으로만 쓴다. /actuator/* 는 외부에 열지 않고 관리자 API 로만 보여준다
+management:
+  endpoints:
+    web:
+      exposure:
+        exclude: "*"
+# 장애 알림 메일 수신 주소. 비어 있으면 알림은 로그와 관리자 페이지에만 남는다
+monitoring:
+  alert-email: ${ADMIN_EMAIL:}
 jwt:
   secretKey: ${JWT_SECRET_KEY}
   access:

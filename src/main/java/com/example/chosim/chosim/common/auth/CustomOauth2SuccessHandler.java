@@ -57,7 +57,8 @@ public class CustomOauth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             log.info("회원가입 페이지로 redirect, JWT 임시 토큰 생성");
             redirectUrl = buildRedirectUrl(REDIRECT_URL, "tempToken", token.getAccessToken());
         }
-        else if (checkRole == MemberRole.MEMBER) {
+        // 관리자도 로그인 절차는 일반 회원과 같다(토큰의 role 클레임만 ROLE_ADMIN)
+        else if (checkRole == MemberRole.MEMBER || checkRole == MemberRole.ADMIN) {
             RefreshToken refreshToken = new RefreshToken(principal.getMember().getId(), token.getRefreshToken());
             refreshToken.updateRefreshToken(token.getRefreshToken());
             refreshTokenRepository.save(refreshToken);

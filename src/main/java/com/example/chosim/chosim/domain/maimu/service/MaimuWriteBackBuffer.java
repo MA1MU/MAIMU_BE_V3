@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MaimuWriteBackBuffer {
 
-    static final String BUFFER_KEY = "maimu:write-buffer";
-    static final String DEAD_LETTER_KEY = "maimu:write-buffer:dead";
+    public static final String BUFFER_KEY = "maimu:write-buffer";
+    public static final String DEAD_LETTER_KEY = "maimu:write-buffer:dead";
     private static final int BATCH_SIZE = 1000;
 
     // JPA IDENTITY 전략은 Hibernate 배치 INSERT 를 막기 때문에 대량 반영은 JdbcTemplate 으로 한다.

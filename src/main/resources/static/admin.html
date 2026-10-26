@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAIMU 관리자</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --line:#e3e6ea; --text:#1f2328; --sub:#667085; --ok:#2e9d5b; --warn:#d98a00; --err:#d64545; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  h1 { margin:0; font-size:18px; }
+  h2 { font-size:15px; margin:0 0 12px; }
+  main { padding:20px 24px; display:grid; gap:20px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .label { font-size:12px; color:var(--sub); }
+  .value { font-size:22px; font-weight:600; margin-top:4px; }
+  .detail { font-size:12px; color:var(--sub); margin-top:4px; }
+  .bar { height:6px; background:var(--line); border-radius:3px; margin-top:8px; overflow:hidden; }
+  .bar > div { height:100%; width:0; background:var(--ok); transition:width .3s; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; align-items:center; }
+  input, select, button { font:inherit; font-size:13px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  button { cursor:pointer; }
+  button.primary { background:var(--text); color:#fff; border-color:var(--text); }
+  #logs { background:#0f1115; color:#d0d4da; border-radius:10px; padding:12px; height:60vh; overflow:auto;
+          font:12px/1.5 ui-monospace, Consolas, monospace; white-space:pre-wrap; word-break:break-all; }
+  #logs div:hover { background:#1c2028; cursor:pointer; }
+  .l-WARN { color:#f0c674; } .l-ERROR { color:#ff6b6b; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; font-size:13px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); }
+  th { color:var(--sub); font-weight:500; }
+  .firing { color:var(--err); font-weight:600; }
+  #history div { font-size:13px; padding:4px 0; }
+  #login { display:none; max-width:520px; }
+  #login p { font-size:13px; color:var(--sub); }
+  #login input { width:100%; margin:8px 0; }
+  .muted { font-size:12px; color:var(--sub); }
+</style>
+</head>
+<body>
+<header>
+  <h1>MAIMU 관리자</h1>
+  <span class="muted" id="updated"></span>
+</header>
+
+<main>
+  <!-- 로그인이 안 됐을 때만 보인다 -->
+  <section id="login" class="card">
+    <h2>로그인이 필요합니다</h2>
+    <p id="loginMsg"></p>
+    <p>1) <a href="https://maimu.vercel.app" target="_blank">maimu.vercel.app</a> 에서 관리자 계정으로 로그인한 뒤 이 페이지를 새로고침하세요.<br>
+       2) 또는 액세스 토큰을 직접 붙여넣으세요.</p>
+    <input id="tokenInput" placeholder="액세스 토큰">
+    <button class="primary" id="tokenBtn">확인</button>
+  </section>
+
+  <section id="dashboard" style="display:none">
+    <h2>서버 상태 <span class="muted">(5초마다 갱신)</span></h2>
+    <div class="cards">
+      <div class="card"><div class="label">CPU (프로세스 / 서버)</div><div class="value" id="cpu">-</div><div class="bar"><div id="cpuBar"></div></div></div>
+      <div class="card"><div class="label">힙 메모리</div><div class="value" id="heap">-</div><div class="detail" id="heapDetail"></div><div class="bar"><div id="heapBar"></div></div></div>
+      <div class="card"><div class="label">DB 커넥션 풀 (사용 중 / 최대)</div><div class="value" id="db">-</div><div class="detail" id="dbDetail"></div><div class="bar"><div id="dbBar"></div></div></div>
+      <div class="card"><div class="label">스레드 (상태별)</div><div class="value" id="threads">-</div><div class="detail" id="threadStates"></div><div class="detail" id="uptime"></div></div>
+      <div class="card"><div class="label">비동기 로그 큐 (적재 / 용량)</div><div class="value" id="logQueue">-</div><div class="bar"><div id="logQueueBar"></div></div></div>
+      <div class="card"><div class="label">Write-back 대기열</div><div class="value" id="buffer">-</div><div class="detail" id="dead"></div></div>
+      <div class="card"><div class="label">ERROR 로그 (기동 후 누적)</div><div class="value" id="errors">-</div></div>
+    </div>
+  </section>
+
+  <section id="alertSection" style="display:none">
+    <h2>알림 기준 <span class="muted">(10초마다 검사 · N회 연속 넘으면 알림 · 같은 알림은 10분에 한 번)</span></h2>
+    <table id="rules"></table>
+    <h2 style="margin-top:16px">최근 알림</h2>
+    <div id="history" class="card"></div>
+  </section>
+
+  <section id="logSection" style="display:none">
+    <h2>로그 <span class="muted">(최신이 위 · 줄을 누르면 그 요청의 traceId 로 필터)</span></h2>
+    <div class="controls">
+      <input id="keyword" placeholder="키워드 / traceId / ERROR" size="28">
+      <select id="lines">
+        <option>100</option><option selected>200</option><option>500</option><option>1000</option>
+      </select>
+      <button class="primary" id="searchBtn">조회</button>
+      <button id="errorBtn">ERROR만</button>
+      <button id="clearBtn">필터 해제</button>
+      <label class="muted"><input type="checkbox" id="auto"> 5초 자동 갱신</label>
+    </div>
+    <div id="logs"></div>
+  </section>
+</main>
+
+<script>
+  // 이 페이지는 API 서버와 같은 도메인에서 서빙된다.
+  // 그래서 회원 로그인 때 받은 refreshToken 쿠키(HttpOnly)가 자동으로 실려 가고, 재발급 API 로 액세스 토큰을 얻을 수 있다.
+  let token = sessionStorage.getItem('adminToken');
+  const $ = (id) => document.getElementById(id);
+
+  async function reissue() {
+    const res = await fetch('/v1/api/auth/reissue', { method: 'POST', credentials: 'same-origin' });
+    if (!res.ok) return false;
+    setToken((await res.json()).accessToken);
+    return true;
+  }
+
+  function setToken(value) {
+    token = value;
+    sessionStorage.setItem('adminToken', value);
+  }
+
+  // 401 이거나 만료(T-003)면 한 번만 재발급 후 다시 시도한다 — 프론트 axios 인터셉터와 같은 규칙
+  async function api(path, retry = true) {
+    const res = await fetch(path, { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    if (res.ok) return res.json();
+    const body = await res.json().catch(() => ({}));
+    if (retry && (res.status === 401 || body.code === 'T-003') && await reissue()) return api(path, false);
+    throw { status: res.status, message: body.message || res.statusText };
+  }
+
+  function showLogin(err) {
+    $('dashboard').style.display = $('alertSection').style.display = $('logSection').style.display = 'none';
+    $('login').style.display = 'block';
+    $('loginMsg').textContent = err.status === 403 ? '관리자 권한이 없는 계정입니다.' : (err.message || '');
+  }
+
+  function setBar(id, ratio) {
+    const pct = Math.min(100, Math.max(0, ratio * 100));
+    const bar = $(id);
+    bar.style.width = pct + '%';
+    bar.style.background = pct > 85 ? 'var(--err)' : pct > 60 ? 'var(--warn)' : 'var(--ok)';
+  }
+
+  async function loadMetrics() {
+    const m = await api('/v1/api/admin/metrics');
+    $('cpu').textContent = m.processCpuPercent.toFixed(1) + '% / ' + m.systemCpuPercent.toFixed(1) + '%';
+    setBar('cpuBar', m.systemCpuPercent / 100);
+    $('heap').textContent = m.heapUsedMb + ' MB';
+    $('heapDetail').textContent = '최대 ' + m.heapMaxMb + ' MB · GC ' + m.gcCount + '회 / 누적 ' + m.gcTimeMs + 'ms';
+    setBar('heapBar', m.heapMaxMb > 0 ? m.heapUsedMb / m.heapMaxMb : 0);
+    $('db').textContent = m.dbActive + ' / ' + m.dbMax;
+    $('dbDetail').textContent = '유휴 ' + m.dbIdle + ' · 커넥션 기다리는 스레드 ' + m.dbWaiting;
+    setBar('dbBar', m.dbMax ? m.dbActive / m.dbMax : 0);
+    const states = Object.entries(m.threadStates);
+    $('threads').textContent = states.reduce((sum, [, n]) => sum + n, 0);
+    $('threadStates').textContent = states.map(([s, n]) => s + ' ' + n).join(' · ');
+    $('logQueue').textContent = m.logQueueUsed + ' / ' + m.logQueueCapacity;
+    setBar('logQueueBar', m.logQueueCapacity ? m.logQueueUsed / m.logQueueCapacity : 0);
+    $('uptime').textContent = '가동 ' + Math.floor(m.uptimeSeconds / 3600) + '시간 ' + Math.floor(m.uptimeSeconds % 3600 / 60) + '분';
+    $('errors').textContent = m.errorLogCount + '건';
+    $('buffer').textContent = m.writeBufferSize < 0 ? 'Redis 조회 실패' : m.writeBufferSize + '건';
+    $('dead').textContent = '실패 격리(dead letter) ' + m.deadLetterSize + '건';
+    $('updated').textContent = '갱신 ' + new Date().toLocaleTimeString();
+  }
+
+  function cell(row, text, className) {
+    const td = document.createElement('td');
+    td.textContent = text;
+    if (className) td.className = className;
+    row.appendChild(td);
+  }
+
+  async function loadAlerts() {
+    const s = await api('/v1/api/admin/alerts');
+    const table = $('rules');
+    table.replaceChildren();
+    const head = table.insertRow();
+    ['기준', '임계값', '연속', '현재 값', '상태'].forEach((h) => {
+      const th = document.createElement('th'); th.textContent = h; head.appendChild(th);
+    });
+    s.rules.forEach((r) => {
+      const row = table.insertRow();
+      const fmt = (v) => (r.unit === '%' ? v.toFixed(1) : Math.round(v)) + r.unit;
+      cell(row, r.description);
+      cell(row, fmt(r.threshold) + ' 이상');
+      cell(row, r.consecutive + '회');
+      cell(row, fmt(r.lastValue));
+      cell(row, r.firing ? '알림 중' : (r.breachCount ? '초과 ' + r.breachCount + '회째' : '정상'), r.firing ? 'firing' : '');
+    });
+    const box = $('history');
+    box.replaceChildren();
+    s.history.forEach((a) => {
+      const div = document.createElement('div');
+      div.textContent = new Date(a.at).toLocaleString() + '  ' + (a.recovered ? '✅ 해소' : '🚨 알림') + '  ' + a.message;
+      box.appendChild(div);
+    });
+    if (!s.history.length) box.textContent = '아직 알림이 없습니다.';
+  }
+
+  async function loadLogs() {
+    const params = new URLSearchParams({ lines: $('lines').value, keyword: $('keyword').value });
+    const lines = await api('/v1/api/admin/logs?' + params);
+    const box = $('logs');
+    box.replaceChildren();
+    lines.reverse().forEach((line) => {
+      const div = document.createElement('div');
+      div.textContent = line;  // 로그에는 사용자 입력이 섞일 수 있으므로 innerHTML 을 쓰지 않는다(XSS 방지)
+      const level = line.match(/ (WARN|ERROR) /);
+      if (level) div.className = 'l-' + level[1];
+      box.appendChild(div);
+    });
+    if (!lines.length) box.textContent = '로그가 없습니다.';
+  }
+
+  // 로그 줄 형식: 날짜 시간 레벨 [스레드] [traceId] [memberId] ...  → 두 번째 대괄호가 traceId
+  $('logs').addEventListener('click', (e) => {
+    const m = e.target.textContent.match(/^\S+ \S+ +\w+ +\[[^\]]*\] \[([^\]]+)\]/);
+    if (m) { $('keyword').value = m[1]; loadLogs().catch(showLogin); }
+  });
+  $('searchBtn').onclick = () => loadLogs().catch(showLogin);
+  $('keyword').onkeydown = (e) => { if (e.key === 'Enter') $('searchBtn').click(); };
+  $('errorBtn').onclick = () => { $('keyword').value = 'ERROR'; $('searchBtn').click(); };
+  $('clearBtn').onclick = () => { $('keyword').value = ''; $('searchBtn').click(); };
+  $('tokenBtn').onclick = () => { setToken($('tokenInput').value.trim()); start(); };
+
+  async function start() {
+    try {
+      await loadMetrics();
+      await loadAlerts();
+      await loadLogs();
+      $('login').style.display = 'none';
+      $('dashboard').style.display = $('alertSection').style.display = $('logSection').style.display = 'block';
+    } catch (err) {
+      showLogin(err);
+    }
+  }
+
+  setInterval(() => {
+    if ($('dashboard').style.display === 'none') return;
+    loadMetrics().catch(showLogin);
+    loadAlerts().catch(showLogin);
+    if ($('auto').checked) loadLogs().catch(showLogin);
+  }, 5000);
+
+  start();
+</script>
+</body>
+</html>

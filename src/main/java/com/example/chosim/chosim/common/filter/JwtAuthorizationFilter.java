@@ -30,6 +30,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private static final String OAUTH2 = "/oauth2";
     private static final String GUEST_URL = "/v1/api/guest";
     private static final String AUTH_URL = "/v1/api/auth";
+    private static final String ADMIN_PAGE = "/admin.html";
 
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -65,6 +66,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 || path.startsWith(OAUTH2)
                 || path.startsWith(GUEST_URL)
                 || path.startsWith(AUTH_URL)
+                || path.equals(ADMIN_PAGE)
                 ;
     }
 }

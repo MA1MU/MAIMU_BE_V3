@@ -33,6 +33,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	// 모니터링: CPU·메모리·GC·스레드·커넥션 풀·ERROR 로그 수 지표(Micrometer)를 수집한다
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	// Documentation
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
