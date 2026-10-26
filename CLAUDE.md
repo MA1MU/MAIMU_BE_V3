@@ -19,9 +19,15 @@ Gradle wrapper (Java 17 toolchain). On Windows use `.\gradlew.bat`; under the Ba
 Running locally requires a MySQL database named `maimu` and a Redis instance on `localhost:6379`.
 `docker-compose.yml` only builds the API container — it does **not** provide MySQL/Redis.
 `spring.jpa.hibernate.ddl-auto: none`, so **the schema is not created by the app**; it must exist already.
-No schema DDL is checked into the repo.
+Audit log DDL is in `docs/sql/audit_logs.sql`; existing business schemas still require manual management.
 
 Swagger UI: `/swagger-ui.html`. Health check: `/health`.
+
+### API 목록
+
+| 메서드 | 경로 | 권한 | 비고 |
+| --- | --- | --- | --- |
+| GET | `/v1/api/admin/audit-logs?page=` | ADMIN | 삭제·탈퇴 감사 기록, 최신순 20건, page는 0부터 |
 
 ## Architecture
 

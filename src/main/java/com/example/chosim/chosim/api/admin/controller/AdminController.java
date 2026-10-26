@@ -1,11 +1,14 @@
 package com.example.chosim.chosim.api.admin.controller;
 
+import com.example.chosim.chosim.api.admin.dto.AuditLogResponse;
+import com.example.chosim.chosim.common.audit.AuditLogQueryService;
 import com.example.chosim.chosim.common.monitoring.AlertMonitor;
 import com.example.chosim.chosim.common.monitoring.MonitoringService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +26,18 @@ public class AdminController {
 
     private final MonitoringService monitoringService;
     private final AlertMonitor alertMonitor;
+    private final AuditLogQueryService auditLogQueryService;
+
+    @GetMapping("/audit-logs")
+    @Operation(summary = "감사 로그 조회", description = "삭제·탈퇴 시도의 성공/실패를 최신순으로 20건씩 조회합니다. page는 0부터 시작합니다.")
+    public ResponseEntity<AuditLogPage> auditLogs(@RequestParam(defaultValue = "0") int page) {
+        Page<AuditLogResponse> logs = auditLogQueryService.findPage(page).map(AuditLogResponse::from);
+        return ResponseEntity.ok(new AuditLogPage(logs.getContent(), logs.getNumber(), logs.getSize(),
+                logs.getTotalElements(), logs.getTotalPages()));
+    }
+
+    public record AuditLogPage(List<AuditLogResponse> content, int page, int size,
+                               long totalElements, int totalPages) { }
 
     @GetMapping("/logs")
     @Operation(summary = "로그 조회", description = "로그 파일의 마지막 N줄(최대 1000)을 반환합니다. keyword 로 traceId·ERROR 등을 거를 수 있습니다.")

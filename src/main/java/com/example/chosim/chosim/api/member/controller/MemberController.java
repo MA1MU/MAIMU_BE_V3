@@ -1,5 +1,7 @@
 package com.example.chosim.chosim.api.member.controller;
 
+import com.example.chosim.chosim.common.audit.Audited;
+import com.example.chosim.chosim.common.audit.AuditAction;
 
 import com.example.chosim.chosim.api.member.dto.ProfileRequest;
 import com.example.chosim.chosim.api.member.dto.ProfileResponse;
@@ -36,6 +38,7 @@ public class MemberController {
 
 
     @DeleteMapping
+    @Audited(AuditAction.MEMBER_WITHDRAW)
     @Operation(summary = "회원 탈퇴", description = "회원 정보와 연관된 모든 데이터를 삭제합니다.")
     public ResponseEntity<Void> deleteMember(@AuthenticationPrincipal Long memberId) {
         memberService.deleteMember(memberId);

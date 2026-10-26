@@ -1,5 +1,7 @@
 package com.example.chosim.chosim.api.maimu.controller;
 
+import com.example.chosim.chosim.common.audit.Audited;
+import com.example.chosim.chosim.common.audit.AuditAction;
 import com.example.chosim.chosim.api.group.dto.GroupResponse;
 import com.example.chosim.chosim.api.maimu.dto.MaimuFavoriteResponse;
 import com.example.chosim.chosim.api.maimu.dto.MaimuResponse;
@@ -47,6 +49,7 @@ public class MaimuController {
     }
 
     @DeleteMapping("/{maimuId}/delete")
+    @Audited(AuditAction.MAIMU_DELETE)
     @Operation(summary = "마이무 삭제하기", description = "마이무 1개를 삭제합니다.")
     public ResponseEntity<Void> delete(@PathVariable Long maimuId){
         maimuService.deleteMaimu(maimuId);

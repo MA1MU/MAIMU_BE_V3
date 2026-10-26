@@ -1,5 +1,6 @@
 package com.example.chosim.chosim.domain.auth.service;
 
+import com.example.chosim.chosim.common.auth.CurrentMember;
 
 import com.example.chosim.chosim.api.member.dto.ProfileResponse;
 import com.example.chosim.chosim.common.jwt.JwtTokenProvider;
@@ -119,6 +120,7 @@ public class MemberService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void deleteMember(Long memberId) {
+        CurrentMember.requireOwner(memberId);
         try {
             doDeleteMember(memberId);
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {

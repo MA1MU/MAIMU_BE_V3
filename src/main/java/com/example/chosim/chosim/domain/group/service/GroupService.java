@@ -1,5 +1,8 @@
 package com.example.chosim.chosim.domain.group.service;
 
+import com.example.chosim.chosim.common.auth.CurrentMember;
+import com.example.chosim.chosim.common.error.ErrorCode;
+import com.example.chosim.chosim.common.error.exception.AppException;
 import com.example.chosim.chosim.common.invitation.Invitation;
 import com.example.chosim.chosim.common.invitation.InvitationRepository;
 import com.example.chosim.chosim.domain.auth.entity.Member;
@@ -89,7 +92,8 @@ public class GroupService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void deleteGroup(Long id){
         Group group = groupRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new EntityNotFoundException("Group엔티티를 찾을 수 없음."));
+                .orElseThrow(() -> new AppException(ErrorCode.GROUP_NOT_FOUND));
+        CurrentMember.requireOwner(group.getMember().getId());
         groupRepository.delete(group);
         guestGroupCache.evict(id);
     }

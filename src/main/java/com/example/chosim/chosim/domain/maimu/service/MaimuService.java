@@ -1,5 +1,8 @@
 package com.example.chosim.chosim.domain.maimu.service;
 
+import com.example.chosim.chosim.common.auth.CurrentMember;
+import com.example.chosim.chosim.common.error.ErrorCode;
+import com.example.chosim.chosim.common.error.exception.AppException;
 import com.example.chosim.chosim.api.maimu.dto.MaimuFavoriteResponse;
 import com.example.chosim.chosim.api.maimu.dto.PageMaimuResponse;
 import com.example.chosim.chosim.domain.group.entity.Group;
@@ -50,7 +53,8 @@ public class MaimuService {
     @Transactional
     public void deleteMaimu(Long maimuId){
         Maimu maimu = maimuRepository.findById(maimuId)
-                .orElseThrow(() -> new EntityNotFoundException("Maimu엔티티를 찾을 수 없음"));
+                .orElseThrow(() -> new AppException(ErrorCode.MAIMU_NOT_FOUND));
+        CurrentMember.requireOwner(maimu.getGroup().getMember().getId());
         maimuRepository.delete(maimu);
         guestGroupCache.evict(maimu.getGroup().getId());
     }

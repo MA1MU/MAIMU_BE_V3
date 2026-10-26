@@ -1,5 +1,7 @@
 package com.example.chosim.chosim.api.group.controller;
 
+import com.example.chosim.chosim.common.audit.Audited;
+import com.example.chosim.chosim.common.audit.AuditAction;
 import com.example.chosim.chosim.api.group.dto.GroupRequest;
 import com.example.chosim.chosim.api.group.dto.GroupResponse;
 import com.example.chosim.chosim.common.dto.ResponseDTO;
@@ -55,6 +57,7 @@ public class GroupController {
     }
 
     @DeleteMapping("/{groupId}")
+    @Audited(AuditAction.GROUP_DELETE)
     @Operation(summary = "기존 그룹 삭제하기", description = "나의 사물함 페이지에 있는 그룹 하나를 삭제한다.")
     public ResponseEntity<Void> deleteGroup(@PathVariable Long groupId){
         groupService.deleteGroup(groupId);

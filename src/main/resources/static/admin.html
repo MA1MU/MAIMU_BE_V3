@@ -36,6 +36,9 @@
   #login p { font-size:13px; color:var(--sub); }
   #login input { width:100%; margin:8px 0; }
   .muted { font-size:12px; color:var(--sub); }
+  .audit-table { overflow-x:auto; }
+  #auditLogs { min-width:900px; }
+  #auditLogs td { overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -73,6 +76,17 @@
     <table id="rules"></table>
     <h2 style="margin-top:16px">최근 알림</h2>
     <div id="history" class="card"></div>
+  </section>
+
+  <section id="auditSection" style="display:none">
+    <h2>감사 로그 <span class="muted">(삭제·탈퇴 시도 · 최신순 20건 · traceId를 누르면 파일 로그 검색)</span></h2>
+    <div class="controls">
+      <button class="primary" id="auditRefreshBtn">조회</button>
+      <button id="auditPrevBtn" disabled>이전</button>
+      <button id="auditNextBtn" disabled>다음</button>
+      <span class="muted" id="auditStatus"></span>
+    </div>
+    <div class="audit-table"><table id="auditLogs"></table></div>
   </section>
 
   <section id="logSection" style="display:none">
@@ -119,7 +133,7 @@
   }
 
   function showLogin(err) {
-    $('dashboard').style.display = $('alertSection').style.display = $('logSection').style.display = 'none';
+    $('dashboard').style.display = $('alertSection').style.display = $('auditSection').style.display = $('logSection').style.display = 'none';
     $('login').style.display = 'block';
     $('loginMsg').textContent = err.status === 403 ? '관리자 권한이 없는 계정입니다.' : (err.message || '');
   }
@@ -202,6 +216,58 @@
     if (!lines.length) box.textContent = '로그가 없습니다.';
   }
 
+  let auditPage = 0;
+  let auditBusy = false;
+  async function loadAuditLogs(page = auditPage) {
+    if (auditBusy) return;
+    auditBusy = true;
+    $('auditRefreshBtn').disabled = $('auditPrevBtn').disabled = $('auditNextBtn').disabled = true;
+    try {
+      const data = await api('/v1/api/admin/audit-logs?page=' + page);
+      const table = $('auditLogs');
+      table.replaceChildren();
+      const head = table.insertRow();
+      ['시각', '행위', '시도한 회원 ID', '대상 ID', '결과', '실패 사유', 'traceId'].forEach((label) => {
+        const th = document.createElement('th'); th.textContent = label; head.appendChild(th);
+      });
+      data.content.forEach((entry) => {
+        const row = table.insertRow();
+        cell(row, new Date(entry.createdAt).toLocaleString());
+        cell(row, entry.action);
+        cell(row, entry.actorMemberId ?? '-');
+        cell(row, entry.targetId);
+        cell(row, entry.result, entry.result === 'FAILURE' ? 'firing' : '');
+        cell(row, entry.errorMessage ?? '-');
+        const traceCell = document.createElement('td');
+        if (entry.traceId) {
+          const button = document.createElement('button');
+          button.textContent = entry.traceId;
+          button.onclick = () => { $('keyword').value = entry.traceId; loadLogs().catch(showLogin); };
+          traceCell.appendChild(button);
+        } else {
+          traceCell.textContent = '-';
+        }
+        row.appendChild(traceCell);
+      });
+      auditPage = data.page;
+      $('auditStatus').textContent = data.totalElements
+        ? (data.page + 1) + ' / ' + data.totalPages + ' 페이지 · 총 ' + data.totalElements + '건'
+        : '감사 로그가 없습니다.';
+      $('auditPrevBtn').disabled = data.page === 0;
+      $('auditNextBtn').disabled = data.page + 1 >= data.totalPages;
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) showLogin(err);
+      // 테이블 미생성 등 감사 조회 장애가 기존 지표·파일 로그 화면을 막지 않게 한다.
+      $('auditStatus').textContent = '감사 로그 조회 실패: ' + (err.message || '잠시 후 다시 조회하세요.');
+    } finally {
+      auditBusy = false;
+      $('auditRefreshBtn').disabled = false;
+    }
+  }
+  $('auditRefreshBtn').onclick = () => loadAuditLogs();
+  $('auditPrevBtn').onclick = () => loadAuditLogs(auditPage - 1);
+  $('auditNextBtn').onclick = () => loadAuditLogs(auditPage + 1);
+
   // 로그 줄 형식: 날짜 시간 레벨 [스레드] [traceId] [memberId] ...  → 두 번째 대괄호가 traceId
   $('logs').addEventListener('click', (e) => {
     const m = e.target.textContent.match(/^\S+ \S+ +\w+ +\[[^\]]*\] \[([^\]]+)\]/);
@@ -219,7 +285,8 @@
       await loadAlerts();
       await loadLogs();
       $('login').style.display = 'none';
-      $('dashboard').style.display = $('alertSection').style.display = $('logSection').style.display = 'block';
+      $('dashboard').style.display = $('alertSection').style.display = $('auditSection').style.display = $('logSection').style.display = 'block';
+      await loadAuditLogs(0);
     } catch (err) {
       showLogin(err);
     }

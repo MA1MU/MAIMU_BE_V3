@@ -66,6 +66,8 @@ dependencies {
 	testImplementation 'org.mockito:mockito-junit-jupiter'
 	testImplementation 'org.wiremock:wiremock:3.9.2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// 실제 프록시·커밋·롤백 검증용. 운영 jar에는 포함되지 않는다.
+	testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {

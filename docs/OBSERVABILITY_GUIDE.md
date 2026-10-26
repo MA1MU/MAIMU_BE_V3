@@ -16,8 +16,9 @@
 | 모니터링 | CPU·힙·GC·커넥션 풀·스레드 상태·ERROR 수·큐 길이 수집 | `MonitoringService` |
 | 알림 | 7개 기준을 10초마다 검사해 넘으면 메일·화면으로 알린다 | `AlertMonitor` |
 | 관리자 페이지 | 위 모든 것을 보는 HTML 한 장 `/admin.html` | `static/admin.html`, `AdminController` |
+| 감사 로그 | 세 삭제 API의 성공·실패를 별도 트랜잭션으로 DB에 보관 | `common/audit`, 12절 |
 
-추가한 라이브러리: `spring-boot-starter-actuator` 하나. 지표 수집용으로만 쓰고 `/actuator/*` URL은 외부에 열지 않았다.
+운영 의존성에 추가한 라이브러리는 `spring-boot-starter-actuator` 하나다. 지표 수집용으로만 쓰고 `/actuator/*` URL은 외부에 열지 않았다. 감사 로그의 트랜잭션 검증에는 **테스트 전용 H2**를 추가했다(12절). 운영 jar에는 들어가지 않는다.
 
 ---
 
@@ -419,6 +420,18 @@ AOP는 컨트롤러에 도달한 요청만 감싼다. 인증 실패 요청도 �
 **Q12. 모니터링 값은 실시간인가?**
 화면은 5초, 알림은 10초 주기로 읽는 거의 실시간 값이다. 다만 현재 값만 보여주고 과거 기록은 저장하지 않아서 추이는 볼 수 없고, 누적값과 최근 알림은 재시작하면 초기화된다. 추이가 필요하면 Micrometer 지표를 Prometheus가 주기적으로 수집해 시계열 DB에 쌓는 구조로 확장한다(6.2절).
 
+**Q13. 업무가 롤백됐는데 감사 로그는 어떻게 남나? 자기 호출은 왜 안 되나?**
+세 삭제 컨트롤러를 `AuditAspect`로 감쌌다. 내부 업무 서비스의 트랜잭션 프록시가 롤백을 끝내고 예외를 던지면, AOP가 별도 빈 `AuditLogService.record()`를 호출한다. 이 메서드가 `REQUIRES_NEW`로 자기 트랜잭션을 커밋한 뒤 원래 업무 예외를 다시 던진다. 같은 빈에서 `this.record()`를 부르면 프록시를 안 지나 전파 옵션이 적용되지 않으므로 저장 빈을 분리했다. 성공도 업무 커밋 이후에만 기록해서 커밋 단계의 실패를 SUCCESS로 남기지 않는다.
+
+**Q14. REQUIRES_NEW면 커넥션이 두 개 필요한가? 왜 afterCommit을 안 썼나?**
+진행 중인 트랜잭션 안에서 부르면 바깥 커넥션을 붙잡은 채 새 커넥션이 필요하다. 풀이 기본 10개이므로 10개 요청이 모두 바깥 커넥션을 점유하면 감사용 커넥션을 기다리다 풀 타임아웃이 날 수 있다. 이번 API 경계는 업무 프록시가 종료된 **뒤** 호출하므로 일반 경로에서는 업무 커넥션을 반환한 뒤 감사 커넥션을 쓴다. `afterCommit`은 성공만 다루고 실패 기록을 따로 만들어야 하며 콜백 시점에는 업무 리소스가 아직 정리되지 않았을 수 있어, 성공·실패를 같은 경계에서 처리하는 방식을 골랐다.
+
+**Q15. 회원을 삭제하면서 감사 테이블에 회원 FK를 걸면 안 되나?**
+같은 회원 행을 바깥 트랜잭션이 비관적 락으로 잡은 동안 감사 INSERT가 FK 검사를 하면, 새 트랜잭션이 바깥 트랜잭션의 락 해제를 기다릴 수 있다. 바깥 호출도 감사 완료를 기다리면 서로 진행하지 못한다. 탈퇴 이후에도 이력을 남겨야 하므로 actor/target은 단순 BIGINT로만 보관하고 FK·JPA 연관관계를 두지 않았다. 현재 API 경계에서는 업무 락 해제 뒤 기록하지만, 추후 호출 위치가 바뀌더라도 FK 경합을 만들지 않는 모델이다.
+
+**Q16. 감사 저장이 실패해도 성공 응답을 주면 이력이 유실되는 것 아닌가?**
+맞다. 이번 범위는 **감사 저장 실패가 업무 결과를 뒤집지 않는 최선 노력(best-effort) 기록**이다. 저장·커밋 예외는 프록시 바깥에서 잡아 WARN으로 남기며, DB 장애나 프로세스 강제 종료 시 이력 유실을 완전히 막지는 못한다. 이력 무손실이 필수라면 별도 내구성 큐·저장소와 재처리 정책이 필요하다. `REQUIRES_NEW`가 보장하는 것은 트랜잭션 독립성이지 장애 시 기록 성공 자체가 아니다.
+
 ---
 
 ## 11. 일부러 안 한 것
@@ -430,3 +443,143 @@ AOP는 컨트롤러에 도달한 요청만 감싼다. 인증 실패 요청도 �
 | Slack 등 메신저 알림 | 메일로 늦게 보는 문제가 생길 때 (`sendMail` 한 곳만 바꾸면 된다) |
 | 알림 기준을 설정 파일로 분리 | 운영 중 자주 바꾸게 될 때. 지금은 `AlertMonitor.rules` 한 곳 |
 | 응답 시간 p95 알림 | 지금은 1초 넘는 요청을 `[API 느림]` WARN으로만 남긴다 |
+
+---
+
+## 12. 감사 로그 — 업무 결과와 별도로 남기는 삭제 이력
+
+### 12.1 일반 로그와 저장소를 다르게 고른 이유
+
+6.1절의 "로그를 DB에 넣지 않는다"는 원칙은 일반 실행 로그에 관한 것이다. 감사 로그는 세 삭제 행위만 한 건씩 남기므로 목적과 양이 다르다.
+
+| 구분 | 일반 로그 | 감사 로그 |
+| --- | --- | --- |
+| 질문 | 어느 SQL·코드에서 왜 느리거나 실패했나? | 누가 어떤 대상을 삭제하려 했고 결과가 무엇인가? |
+| 양 | 요청·SQL마다 여러 줄 | 지정한 삭제 API 호출당 한 행 |
+| 저장 | AsyncAppender → 파일, 7일/100MB 롤링 | `audit_logs` 테이블, 독립 트랜잭션 |
+| 조회 | 파일 tail, traceId 문자열 검색 | 관리자 API 최신순 페이지 조회, traceId 인덱스 |
+| 업무 롤백 | 파일 로그는 별개로 남음 | 별도 커밋이므로 업무 롤백과 분리됨 |
+| 장애 한계 | 강제 종료 시 큐의 로그 유실 가능 | DB/풀 장애·프로세스 종료 시 저장 실패·미기록 가능 |
+| 보관 | 자동 롤링 | 자동 삭제 정책은 이번 범위에 없음. 운영 보관 기간·용량 관리가 필요 |
+
+토큰·쪽지 본문·회원 이름·이메일은 별도 컬럼으로 수집하지 않는다. 식별자·행위·결과와 제한된 예외 메시지만 보관한다. 실패 사유는 예외 클래스와 메시지를 합쳐 최대 500자로 제한하고 제어문자를 공백으로 바꾼다. 예외 메시지에 내부 정보가 포함될 수 있으므로 조회는 ADMIN에게만 허용한다.
+
+### 12.2 범위와 실제 실행 순서
+
+| API | action | target_id |
+| --- | --- | --- |
+| `DELETE /v1/api/maimu/{maimuId}/delete` | `MAIMU_DELETE` | 쪽지 ID |
+| `DELETE /v1/api/group/{groupId}` | `GROUP_DELETE` | 그룹 ID |
+| `DELETE /v1/api/member` | `MEMBER_WITHDRAW` | 탈퇴 회원 ID |
+
+`@Audited`는 이 세 **컨트롤러 메서드**에만 붙인다. 모두 첫 인자가 대상 ID다. actor는 URL이나 요청 바디가 아니라 `SecurityContextHolder`의 `Long` principal에서, traceId는 `MDC.get(MdcFilter.TRACE_ID)`에서 호출 전에 캡처한다. 회원 삭제 후에도 숫자 actor를 그대로 남길 수 있다.
+
+```text
+HTTP → AuditAspect (업무 트랜잭션 바깥)
+        → Controller → 업무 Service 프록시
+                         BEGIN → 삭제 → COMMIT 또는 ROLLBACK → 리소스 반환
+        ← 반환 또는 예외 (커밋 단계의 실패도 여기로 돌아온다)
+        → 별도 빈 AuditLogService 프록시
+             REQUIRES_NEW → INSERT audit_logs → COMMIT
+        → 원래 응답 반환 / 원래 예외 다시 던짐
+```
+
+서비스 안의 catch에서 실패를 기록하는 방식은 고르지 않았다. rollback-only 상태뿐 아니라 **메서드 본문 반환 뒤 커밋 중 발생한 오류**까지 구분하려고 업무 프록시 전체를 바깥에서 감싼다. 감사 저장 실패는 별도로 잡으므로 업무 성공을 실패로 바꾸거나 원래 업무 예외를 덮지 않는다.
+
+이것은 HTTP 삭제 시도 기록이다. 인증·인가 필터에서 거절된 요청, 경로 인자 변환 실패, 서비스 직접 호출, 그룹/회원 삭제에 따른 하위 쪽지의 개별 삭제는 별도 감사 행으로 남기지 않는다. 기존 필터/파일 로그 범위다. 컨트롤러에 `@Transactional`을 새로 붙이거나 다른 트랜잭션에서 호출하면 이 경계 가정이 달라지므로 설계를 다시 검토해야 한다.
+
+### 12.3 REQUIRES_NEW의 일반 동작과 커넥션 비용
+
+업무 트랜잭션 **안에서** 별도 빈을 호출하는 일반적인 경우는 다음과 같다. 통합 테스트에서 이 경로도 검증했다.
+
+```text
+업무 Tx A / 커넥션 1: BEGIN → 행 잠금·업무 변경
+                     │
+                     ├─ 일시정지 (커넥션 1과 락은 계속 보유)
+                     │     감사 Tx B / 새 커넥션 2: BEGIN → INSERT → COMMIT
+                     ├─ 재개
+                     └─ 업무 예외 → ROLLBACK
+결과: 업무 변경은 취소, 감사 Tx B의 기록은 유지
+```
+
+HikariCP 최대는 별도 설정이 없어 기본 **10개**다. 위처럼 중첩하면 요청당 두 커넥션을 동시에 요구하고, 요청이 몰릴 때 풀 고갈·서로 기다리는 상황이 생길 수 있다. `REQUIRES_NEW`가 자동으로 별도 풀을 만들어 주지는 않는다. 이번 실제 API 경로는 12.2절처럼 **업무 Tx 종료 뒤** 기록해 이 동시 점유를 피한다. 그래도 감사 INSERT/커밋 왕복은 응답 시간에 추가되며, DB 장애 시 커넥션 타임아웃을 기다릴 수 있다. 예외 격리는 지연 격리와 다르다.
+
+| 대안 | 장점 | 이번 선택과의 비교 |
+| --- | --- | --- |
+| 업무 트랜잭션 안에서 `REQUIRES_NEW` | 실패 직전에도 독립 저장 가능 | 추가 커넥션·업무 락 보유 중 저장. 성공을 미리 기록하면 나중 커밋 실패와 어긋남 |
+| `afterCommit`에서 성공 기록 | 실제 커밋 이후라는 사실이 명확 | 실패 경로는 별도 구현해야 함. 콜백 시점 업무 리소스가 아직 남을 수 있어 새 트랜잭션과 커넥션 비용 고려 필요 |
+| **컨트롤러 AOP → 업무 프록시 종료 → `REQUIRES_NEW`** | 성공·실패·커밋 예외를 같은 경계에서 관찰, 평소 동시 커넥션 점유 감소 | 이번 선택. 프로세스 종료로 업무 커밋과 감사 저장 사이 기록이 빠질 수 있음 |
+
+기존 `MemberService.deleteMember()`의 `REPEATABLE_READ`와 회원/그룹 비관적 잠금은 유지했다. 감사 테이블의 actor/target에는 FK·JPA 연관관계가 없고, 저장 시 회원·그룹을 다시 조회하지 않는다. 따라서 감사 INSERT가 삭제 대상 행의 FK 검사 락을 기다리는 경로가 없다. 다른 공통 DB 자원 경합까지 없다는 뜻은 아니다.
+
+### 12.4 저장 실패와 조회 화면
+
+- `AuditLogService.record()`는 **별도 Spring 빈**이고 `@Transactional(REQUIRES_NEW)`다. 자기 호출하지 않는다.
+- `AuditAspect`는 저장 메서드 호출뿐 아니라 **그 프록시의 커밋 실패**도 catch하고 WARN 한 줄만 남긴다. 예외 원문은 파일 로그에 다시 출력하지 않는다.
+- INSERT는 JDBC로 실행한다. JPA 저장 실패 시 Hibernate가 자체적으로 ERROR를 출력하는 경로를 피하려는 선택이다. 감사 저장 코드가 ERROR를 직접 찍으면 `AlertMonitor`의 ERROR 증가량을 다시 올릴 수 있다.
+- `GET /v1/api/admin/audit-logs?page=0`: 기존 ADMIN 전용 경로 아래, 페이지 크기 20 고정. `createdAt DESC, id DESC`로 같은 시각에도 순서를 확정한다. 음수 page는 기존 `INVALID_INPUT`으로 거절한다.
+- 응답은 `content`, `page`, `size`, `totalElements`, `totalPages`를 가진 DTO다. traceId를 누르면 기존 파일 로그 검색으로 연결된다. 과거 파일은 6절의 검색 한계를 그대로 가진다.
+- `admin.html`은 셀·실패 사유·traceId 모두 `textContent`로 표시한다. 감사 조회만 실패하면 해당 섹션에 오류를 보이고 기존 지표/로그 화면은 계속 쓴다.
+- 세 삭제 서비스에 소유자 검증을 추가했다. 남의 데이터 삭제 시도는 `403`, 감사 결과는 FAILURE다. 관리자도 이 일반 삭제 API로는 본인 소유만 삭제한다. 별도의 관리자 강제 삭제 기능은 만들지 않았다.
+
+### 12.5 스키마 반영 — 사람이 실행해야 함
+
+앱은 `ddl-auto: none`이라 테이블을 만들지 않는다. **이번 작업에서는 운영 서버·DB에 접속하지 않았고 DDL도 실행하지 않았다.**
+
+1. DB 담당자가 대상 환경·백업/보관 정책을 확인한다.
+2. 승인된 DB 접속 환경에서 MySQL 클라이언트로 접속한다. 비밀번호는 명령행에 넣지 말고 프롬프트/기존 비밀 관리 경로를 쓴다.
+3. 대상 DB를 선택하고 `docs/sql/audit_logs.sql`을 실행한다. 저장소 루트 기준 예시는 아래와 같다.
+
+```text
+mysql -h <DB_HOST> -u <DB_USER> -p <DB_NAME>
+mysql> SOURCE docs/sql/audit_logs.sql;
+mysql> SHOW CREATE TABLE audit_logs\G
+mysql> SHOW INDEX FROM audit_logs;
+```
+
+DDL은 새 테이블 생성용이며 기존 테이블을 변경하거나 삭제하지 않는다. 이미 테이블이 있으면 덮어쓰지 말고 정의를 비교한다. actor/target FK가 없는지와 created_at·trace_id 인덱스를 확인한 뒤 `feat/audit-log`를 main에 머지·push해 배포한다. 배포 후 본인 소유의 테스트 데이터로 세 API의 SUCCESS/FAILURE와 관리자 조회를 점검한다. 테이블이 없는 상태로 먼저 배포되면 업무는 계속되지만 감사 행이 저장되지 않고 WARN이 남는다. 그 사이 이력은 자동 복구되지 않는다.
+
+### 12.6 검증한 것 / 못 한 것
+
+**로컬에서 확인한 것**
+
+- `gradlew.bat build -x test` 통과.
+- `AuditTransactionTest` 7개: 실제 Spring AOP·JPA 트랜잭션 + H2(MySQL 모드), 외부 MySQL/Redis와 전체 앱 기동 없음.
+  - 업무 DELETE 롤백 후 원래 행 복원 + FAILURE 행 유지, actor/target/traceId 보존.
+  - 커밋 직전 예외도 SUCCESS가 아닌 FAILURE로 기록.
+  - 정상 삭제는 업무 커밋 후 SUCCESS로 기록하고 실패 사유는 NULL.
+  - 감사 테이블을 실제 DROP해도 성공한 업무 커밋 유지, 실패한 업무의 원래 예외 유지.
+  - 바깥 Tx가 행 잠금을 가진 채 별도 빈을 호출한 뒤 롤백해도 감사 행은 유지, FK 없음 확인.
+  - 배포용 DDL을 H2 MySQL 모드에서 실행, JPA 매핑으로 조회·동일 시각의 최신순 페이지 경계 확인.
+- Mockito 단위 테스트: 감사 저장 예외는 WARN만 출력하고 응답 보존, actor/trace 전달, 메시지 길이·제어문자 처리, 세 서비스의 타인 삭제 방어, 관리자 조회 DTO·음수 페이지 거절.
+- 최종 선택 실행: 신규 15개 + 기존 `MonitoringServiceTest` 3개 / `AlertRuleTest` 3개 / `MaimuWriteBackBufferTest` 2개 = **23개 모두 통과**. 외부 DB/Redis가 필요한 전체 컨텍스트 테스트는 실행하지 않았다.
+- 관리자 HTML의 스크립트를 JSDOM에서 실행해 사용자 문자열이 태그로 해석되지 않는 것, 이전/다음 버튼 상태, traceId 클릭 시 파일 로그 검색 연계를 확인했다. 실제 브라우저·운영 API를 호출한 검증은 아니다.
+
+Mockito만으로는 "새 트랜잭션에서 실제 커밋됐다"를 증명할 수 없어 H2 통합 테스트를 추가했다. 테스트 클래스 자체에는 `@Transactional`을 붙이지 않아 테스트 프레임워크의 자동 롤백에 가리지 않도록 했다. H2는 `testRuntimeOnly`라 운영 의존성이 아니다.
+
+```text
+gradlew.bat test --tests "*AuditTransactionTest" --tests "*AuditAspectTest" --tests "*DeleteOwnershipTest" --tests "*AdminAuditControllerTest"
+```
+
+**확인하지 않은 것**
+
+- 운영 MySQL DDL 실행, 실제 회원/그룹/쪽지 삭제를 통한 운영 이력 확인, 실제 브라우저 관리자 화면 확인.
+- MySQL InnoDB의 `REPEATABLE_READ`·갭 락·동시 탈퇴 상황, Hikari 최대 10개에서의 부하/풀 고갈 재현. H2의 행 잠금 테스트를 MySQL과 동등한 검증으로 주장하지 않는다.
+- 감사 추가 전후의 지연/TPS 수치, 프로세스 강제 종료 시 이력 유실 범위, DB 장애 시 최대 응답 지연.
+- 새 URL의 인증/인가를 전체 보안 필터 체인으로 호출한 테스트. 기존 `/v1/api/admin/**` ADMIN 규칙을 코드로 확인했고 MockMvc 테스트는 DTO/페이지 계약만 검증한다.
+
+### 12.7 이번 변경 파일
+
+Java 경로는 `src/main/java/com/example/chosim/chosim/`, 테스트 경로는 `src/test/java/com/example/chosim/chosim/` 기준이다.
+
+| 위치 | 파일 |
+| --- | --- |
+| `common/audit/` 신규 | `AuditAction.java`, `AuditResult.java`, `Audited.java`, `AuditLog.java`, `AuditLogRepository.java`, `AuditLogService.java`, `AuditAspect.java`, `AuditLogQueryService.java` |
+| `common/auth/` 신규 | `CurrentMember.java` |
+| `common/error/` 수정 | `ErrorCode.java` (`A-001`, 기존 코드와 중복 없음) |
+| 관리자 API | `api/admin/controller/AdminController.java`, `api/admin/dto/AuditLogResponse.java` |
+| 감사 대상 컨트롤러 | `api/maimu/controller/MaimuController.java`, `api/group/controller/GroupController.java`, `api/member/controller/MemberController.java` |
+| 소유자 검증 서비스 | `domain/maimu/service/MaimuService.java`, `domain/group/service/GroupService.java`, `domain/auth/service/MemberService.java` |
+| 관리자 화면 | `src/main/resources/static/admin.html` |
+| 스키마·문서·테스트 의존성 | `docs/sql/audit_logs.sql`, `docs/OBSERVABILITY_GUIDE.md`, `CLAUDE.md`, `build.gradle` |
+| 신규 테스트 | `common/audit/AuditTransactionTest.java`, `common/audit/AuditAspectTest.java`, `common/audit/DeleteOwnershipTest.java`, `api/admin/controller/AdminAuditControllerTest.java` |

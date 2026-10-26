@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     // DTO 에서 발생하는 에러
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "I-001", "입력 값이 잘못되었습니다."),
+    DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "A-001", "본인 소유의 데이터만 삭제할 수 있습니다."),
     // 404 오류 -> 객체를 찾을 수 없는 문제
     ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "I-201", "해당 Entity를 찾을 수 없습니다."),
 
